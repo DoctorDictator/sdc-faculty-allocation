@@ -1,0 +1,808 @@
+{
+  "source": "https://jaipur.manipal.edu/fosta/department-of-Computer-Science-Engineering.php",
+  "facultyListSource": "https://jaipur.manipal.edu/fosta/faculty-list.php",
+  "retrievedAt": "2026-11-07T16:42:28+05:30",
+  "faculty": [
+    {
+      "sourceId": "203",
+      "name": "Dr. Aditya Sinha",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "aditya.sinha@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/203.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=203/"
+    },
+    {
+      "sourceId": "207",
+      "name": "Dr. Ajay Kumar",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "ajay.k@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/207.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=207/"
+    },
+    {
+      "sourceId": "174",
+      "name": "Dr. Ajay Kumar",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "kumar.ajay@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/174.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=174/"
+    },
+    {
+      "sourceId": "184",
+      "name": "Dr. Ajit Noonia",
+      "title": "Associate Professor & Assistant Director (CR &P)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "ajit.noonia@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/184.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=184/"
+    },
+    {
+      "sourceId": "650",
+      "name": "Dr. Akshay Jadhav",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "akshay.jadhav@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/650.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=650/"
+    },
+    {
+      "sourceId": "1066",
+      "name": "Dr. Amandeep Cheema",
+      "title": "Assistant professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "amandeep.cheema@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1066.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1066/"
+    },
+    {
+      "sourceId": "176",
+      "name": "Dr. Amit Garg",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "amit.garg@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/176.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=176/"
+    },
+    {
+      "sourceId": "167",
+      "name": "Dr. Amit Kumar Gupta",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "amit.gupta@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/167.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=167/"
+    },
+    {
+      "sourceId": "183",
+      "name": "Dr. Anil Kumar",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "anil.kumar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/183.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=183/"
+    },
+    {
+      "sourceId": "186",
+      "name": "Dr. Ankit Shrivastava",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "ankit.shrivastava@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/186.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=186/"
+    },
+    {
+      "sourceId": "218",
+      "name": "Dr. Ankur Pandey",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "ankur.pandey@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/218.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=218/"
+    },
+    {
+      "sourceId": "888",
+      "name": "Dr. Arpita Baronia",
+      "title": "Assistant professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "arpita.baronia@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/888.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=888/"
+    },
+    {
+      "sourceId": "1116",
+      "name": "Dr. Arshpreet Kaur",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "arshpreet.kaur@jaipu.manipal.edu",
+      "photoPath": "/faculty-directory/1116.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1116/"
+    },
+    {
+      "sourceId": "161",
+      "name": "Dr. Ashish Kumar",
+      "title": "Professor & Deputy Director, Directorate of Admissions",
+      "department": "Department of Computer Science & Engineering",
+      "email": "kumar.ashish@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/161.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=161/"
+    },
+    {
+      "sourceId": "165",
+      "name": "Dr. Ashish Sharma",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sharma.ashish@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/165.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=165/"
+    },
+    {
+      "sourceId": "194",
+      "name": "Dr. Ashok Kumar Saini",
+      "title": "Assistant Professor(Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "ashok.saini@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/194.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=194/"
+    },
+    {
+      "sourceId": "157",
+      "name": "Dr. Chhatar Singh Lamba",
+      "title": "Professor & Associate Dean",
+      "department": "Department of Computer Science & Engineering",
+      "email": "cs.lamba@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/157.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=157/"
+    },
+    {
+      "sourceId": "198",
+      "name": "Dr. Dibakar Sinha",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "dibakar.sinha@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/198.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=198/"
+    },
+    {
+      "sourceId": "665",
+      "name": "Dr. Divya Thakur",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "divya.thakur@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/665.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=665/"
+    },
+    {
+      "sourceId": "181",
+      "name": "Dr. Gireesh Kumar",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "gireesh.kumar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/181.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=181/"
+    },
+    {
+      "sourceId": "195",
+      "name": "Dr. Jay Prakash Singh",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "jayprakash.singh@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/195.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=195/"
+    },
+    {
+      "sourceId": "168",
+      "name": "Dr. Jeyakrishnan V",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "jeyakrishnan.v@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/168.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=168/"
+    },
+    {
+      "sourceId": "196",
+      "name": "Dr. Juhi Singh",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "juhi.singh@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/196.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=196/"
+    },
+    {
+      "sourceId": "1135",
+      "name": "Dr. Kanika Data",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/1135.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1135/"
+    },
+    {
+      "sourceId": "1117",
+      "name": "Dr. Kumar Shashvat",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "kumar.shashvat@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1117.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1117/"
+    },
+    {
+      "sourceId": "1063",
+      "name": "Dr. Madhu Sharma",
+      "title": "Assistant Professor ( Senior Scale )",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/1063.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1063/"
+    },
+    {
+      "sourceId": "1171",
+      "name": "Dr. Mahesh Chaurasia",
+      "title": "Assistant professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "mahesh.chaurasia@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1171.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1171/"
+    },
+    {
+      "sourceId": "160",
+      "name": "Dr. Mahesh Jangid",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "mahesh.jangid@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/160.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=160/"
+    },
+    {
+      "sourceId": "1096",
+      "name": "Dr. Manish Gupta",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/1096.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1096/"
+    },
+    {
+      "sourceId": "173",
+      "name": "Dr. Manmohan Sharma",
+      "title": "Assistant Professor(Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "manmohan.sharma@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/173.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=173/"
+    },
+    {
+      "sourceId": "875",
+      "name": "Dr. Manu Shrivastava",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "manu.shrivastava@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/875.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=875/"
+    },
+    {
+      "sourceId": "214",
+      "name": "Dr. Mayank Namdev",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "mayank.namdev@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/214.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=214/"
+    },
+    {
+      "sourceId": "916",
+      "name": "Dr. Mohit Kushwaha",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "mohit.kushwaha@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/916.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=916/"
+    },
+    {
+      "sourceId": "172",
+      "name": "Dr. Neelam Chaplot",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "neelam.chaplot@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/172.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=172/"
+    },
+    {
+      "sourceId": "180",
+      "name": "Dr. Neetu Gupta",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "neetu.gupta@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/180.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=180/"
+    },
+    {
+      "sourceId": "149",
+      "name": "Dr. Neha Chaudhary",
+      "title": "Professor & HoD",
+      "department": "Department of Computer Science & Engineering",
+      "email": "chaudhary.neha@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/149.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=149/"
+    },
+    {
+      "sourceId": "166",
+      "name": "Dr. Neha Janu",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "neha.janu@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/166.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=166/"
+    },
+    {
+      "sourceId": "664",
+      "name": "Dr. Onkar Singh",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "onkar.singh@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/664.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=664/"
+    },
+    {
+      "sourceId": "208",
+      "name": "Dr. Pallavi",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "pallavi@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/208.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=208/"
+    },
+    {
+      "sourceId": "158",
+      "name": "Dr. Prakash Ramani",
+      "title": "Professor & Director (Admissions)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "prakash.ramani@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/158.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=158/"
+    },
+    {
+      "sourceId": "170",
+      "name": "Dr. Praneet Saurabh",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "praneet.saurabh@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/170.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=170/"
+    },
+    {
+      "sourceId": "178",
+      "name": "Dr. Prashant Vats",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "prashant.vats@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/178.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=178/"
+    },
+    {
+      "sourceId": "169",
+      "name": "Dr. Rajat Goel",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "rajat.goel@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/169.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=169/"
+    },
+    {
+      "sourceId": "1089",
+      "name": "Dr. Rajesh Kumar Chaudhary",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "rajeshkumar.chaudhary@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1089.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1089/"
+    },
+    {
+      "sourceId": "206",
+      "name": "Dr. Rishav Dubey",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "rishav.dubey@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/206.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=206/"
+    },
+    {
+      "sourceId": "163",
+      "name": "Dr. Rishi Gupta",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "rishi.gupta@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/163.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=163/"
+    },
+    {
+      "sourceId": "927",
+      "name": "Dr. Rishi Kumar Srivastva",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "rishi.srivastva@jaipur.maipal.edu",
+      "photoPath": "/faculty-directory/927.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=927/"
+    },
+    {
+      "sourceId": "151",
+      "name": "Dr. Roheet Bhatnagar",
+      "title": "Professor & Associate Dean",
+      "department": "Department of Computer Science & Engineering",
+      "email": "roheet.bhatnagar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/151.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=151/"
+    },
+    {
+      "sourceId": "205",
+      "name": "Dr. Sakshi Shringi",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sakshi.shringi@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/205.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=205/"
+    },
+    {
+      "sourceId": "147",
+      "name": "Dr. Sandeep Chaurasia",
+      "title": "Professor & Director (Corporate Relations & Placements)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sandeep.chaurasia@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/147.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=147/"
+    },
+    {
+      "sourceId": "171",
+      "name": "Dr. Satpal Singh Kushwaha",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "satpal.singh@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/171.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=171/"
+    },
+    {
+      "sourceId": "164",
+      "name": "Dr. Satyabrata Roy",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "satyabrata.roy@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/164.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=164/"
+    },
+    {
+      "sourceId": "179",
+      "name": "Dr. Sayar Singh Shekhawat",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sayar.shekhawat@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/179.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=179/"
+    },
+    {
+      "sourceId": "188",
+      "name": "Dr. Shikha Mundra",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "shikha.mundra@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/188.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=188/"
+    },
+    {
+      "sourceId": "190",
+      "name": "Dr. Shishir Singh Chauhan",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "shishir.chauhan@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/190.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=190/"
+    },
+    {
+      "sourceId": "1161",
+      "name": "Dr. Shruti Mishra",
+      "title": "Assistant professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "shruti.mishra@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1161.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1161/"
+    },
+    {
+      "sourceId": "929",
+      "name": "Dr. Sonia",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/929.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=929/"
+    },
+    {
+      "sourceId": "159",
+      "name": "Dr. Sunita Singhal",
+      "title": "Associate Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sunita.singhal@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/159.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=159/"
+    },
+    {
+      "sourceId": "200",
+      "name": "Dr. Surbhi Sharma",
+      "title": "Assistant Professor (Senior Scale) & Assistant Director, E-Cell",
+      "department": "Department of Computer Science & Engineering",
+      "email": "surbhi.sharma@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/200.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=200/"
+    },
+    {
+      "sourceId": "197",
+      "name": "Dr. Sushama",
+      "title": "Assistant Professor (Senior Scale) & Assistant Director, Directorate of Student Welfare",
+      "department": "Department of Computer Science & Engineering",
+      "email": "sushama.tanwar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/197.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=197/"
+    },
+    {
+      "sourceId": "177",
+      "name": "Dr. Susheela Vishnoi",
+      "title": "Associate Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "susheela.vishnoi@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/177.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=177/"
+    },
+    {
+      "sourceId": "182",
+      "name": "Dr. Tarun Jain",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "tarun.jain@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/182.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=182/"
+    },
+    {
+      "sourceId": "156",
+      "name": "Dr. Umashankar Rawat",
+      "title": "Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "umashankar.rawat@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/156.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=156/"
+    },
+    {
+      "sourceId": "215",
+      "name": "Dr. Usha Jain",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "usha.jain@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/215.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=215/"
+    },
+    {
+      "sourceId": "220",
+      "name": "Dr. Vaishali Chauhan",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "vaishali.chauhan@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/220.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=220/"
+    },
+    {
+      "sourceId": "669",
+      "name": "Dr. Varda Pareek",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "varda.pareek@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/669.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=669/"
+    },
+    {
+      "sourceId": "866",
+      "name": "Dr. Virendra Kumar Meghwal",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "virendra.meghwal@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/866.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=866/"
+    },
+    {
+      "sourceId": "651",
+      "name": "Mr. Abhay Singh Bisht",
+      "title": "Assistant professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "abhay.bisht@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/651.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=651/"
+    },
+    {
+      "sourceId": "666",
+      "name": "Mr. Arvind Mehta",
+      "title": "Assistant professor(adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "arvind.mehta@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/666.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=666/"
+    },
+    {
+      "sourceId": "201",
+      "name": "Mr. Atul Kumar Verma",
+      "title": "Assistant Professor (Senior Scale) & Assistant Director, Directorate of Student Welfare",
+      "department": "Department of Computer Science & Engineering",
+      "email": "atul.verma@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/201.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=201/"
+    },
+    {
+      "sourceId": "930",
+      "name": "Mr. Bhawani Singh Rathore",
+      "title": "Assistant Professor (Adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/930.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=930/"
+    },
+    {
+      "sourceId": "667",
+      "name": "Mr. Jay Shankar Sharma",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "jay.sharma@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/667.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=667/"
+    },
+    {
+      "sourceId": "191",
+      "name": "Mr. Lav Upadhyay",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "lav.upadhyay@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/191.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=191/"
+    },
+    {
+      "sourceId": "660",
+      "name": "Mr. Tapan Kumar Dey",
+      "title": "Assistant Professor (Selection grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "tapan.dey@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/660.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=660/"
+    },
+    {
+      "sourceId": "1041",
+      "name": "Mr. Vijay Hasanpuri",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "vijay.hasanpuri@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/1041.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1041/"
+    },
+    {
+      "sourceId": "175",
+      "name": "Mr. Vivek Singh Sikarwar",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "vivek.sikarwar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/175.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=175/"
+    },
+    {
+      "sourceId": "932",
+      "name": "Mrs. Harshika Mathur",
+      "title": "Assistant Professor (Adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/932.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=932/"
+    },
+    {
+      "sourceId": "931",
+      "name": "Mrs. Tripti Kulshrestha",
+      "title": "Assistant Professor (Adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/931.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=931/"
+    },
+    {
+      "sourceId": "216",
+      "name": "Ms .Santoshi Rudrakar",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "santoshi.rudrakar@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/216.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=216/"
+    },
+    {
+      "sourceId": "655",
+      "name": "Ms Neha",
+      "title": "Assistant professor(adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "neha.singh1@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/655.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=655/"
+    },
+    {
+      "sourceId": "656",
+      "name": "Ms Shweta Sharma",
+      "title": "Assistant professor(adhoc)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "shweta.sharma1@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/656.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=656/"
+    },
+    {
+      "sourceId": "928",
+      "name": "Ms. Akanksha Mrinali",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/928.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=928/"
+    },
+    {
+      "sourceId": "185",
+      "name": "Ms. Anita Shrotriya",
+      "title": "Assistant Professor (Selection Grade)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "anita.shrotriya@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/185.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=185/"
+    },
+    {
+      "sourceId": "193",
+      "name": "Ms. Babita Tiwari",
+      "title": "Assistant Professor (Senior Scale)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "babita.tiwari@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/193.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=193/"
+    },
+    {
+      "sourceId": "202",
+      "name": "Ms. Bali Devi",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "bali.devi@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/202.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=202/"
+    },
+    {
+      "sourceId": "661",
+      "name": "Ms. Kirti Paliwal",
+      "title": "Assistant Professor (Contract)",
+      "department": "Department of Computer Science & Engineering",
+      "email": "kirti.paliwal@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/661.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=661/"
+    },
+    {
+      "sourceId": "1060",
+      "name": "Ms. Nisha Kundu",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/1060.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1060/"
+    },
+    {
+      "sourceId": "1016",
+      "name": "Ms. Soni Gupta",
+      "title": "Assistant Professor (Contract)",
+      "department": "Department of Computer Science & Engineering",
+      "email": null,
+      "photoPath": "/faculty-directory/1016.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=1016/"
+    },
+    {
+      "sourceId": "668",
+      "name": "Ms. Surbhi Syal",
+      "title": "Assistant Professor",
+      "department": "Department of Computer Science & Engineering",
+      "email": "surbhi.syal@jaipur.manipal.edu",
+      "photoPath": "/faculty-directory/668.jpg",
+      "profileUrl": "https://jaipur.manipal.edu/fosta/faculty-details.php?url=668/"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+node_modules/
+.next/
+apps/web/src/generated/prisma/
+.env
+.env.local
+.env.*.local
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+*.py[cod]
+*.tsbuildinfo

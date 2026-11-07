@@ -25,7 +25,7 @@ export async function GET() {
   const isHod = user.role === "HOD";
   const now = new Date();
   const horizonEnd = new Date(now.getTime() + schedulingHorizonDays() * 24 * 60 * 60 * 1000);
-  const [allFaculty, allEvents, published, staffingRequests, optimizerOnline] = await Promise.all([
+  const [allFaculty, allEvents, published, staffingRequests, optimizerOnline, facultyChoices, notifications, unreadNotificationCount] = await Promise.all([
     prisma.faculty.findMany({
       where: isHod ? {} : { id: user.facultyId ?? "" },
       include: { user: { select: { email: true } } },
@@ -50,11 +50,24 @@ export async function GET() {
       include: {
         requester: { select: { name: true, employeeCode: true } },
         event: { select: { id: true, name: true } },
+        proposal: { select: { id: true, status: true } },
       },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       take: 100,
     }),
     optimizerIsAvailable(),
+    prisma.faculty.findMany({
+      where: { active: true },
+      select: { id: true, name: true, employeeCode: true, skills: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.notification.findMany({
+      where: { userId: user.id },
+      select: { id: true, title: true, message: true, section: true, readAt: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
+    prisma.notification.count({ where: { userId: user.id, readAt: null } }),
   ]);
   const allAssignments = published?.assignments ?? [];
   const visibleAssignments = isHod
@@ -155,7 +168,11 @@ export async function GET() {
         where: { status: "PROPOSED" },
         orderBy: { createdAt: "desc" },
         take: 8,
-        include: { assignments: true, parent: { include: { assignments: true } } },
+        include: {
+          assignments: true,
+          parent: { include: { assignments: true } },
+          staffingRequest: { include: { requester: { select: { name: true, employeeCode: true } } } },
+        },
       })
       : Promise.resolve([]),
     prisma.availabilityBlock.findMany({
@@ -199,6 +216,11 @@ export async function GET() {
       changedCount,
       mode: objective?.mode ?? "ALLOCATE",
       uncoveredCount: objective?.uncovered?.length ?? 0,
+      staffingRequest: proposal.staffingRequest ? {
+        eventName: proposal.staffingRequest.eventName,
+        requesterName: proposal.staffingRequest.requester.name,
+        requesterEmployeeCode: proposal.staffingRequest.requester.employeeCode,
+      } : null,
     };
   });
   return NextResponse.json({
@@ -216,11 +238,14 @@ export async function GET() {
       workloadSpreadMinutes: workloadValues.length ? Math.max(...workloadValues) - Math.min(...workloadValues) : 0,
       openProposalCount: proposals.length,
       activeAbsenceCount,
+      unreadNotificationCount,
     },
     faculty: facultyRows,
+    facultyChoices,
     events,
     staffingRequests,
     proposals,
+    notifications,
     absences,
     preferences,
     optimizerOnline,

@@ -67,6 +67,7 @@ export async function loadOptimizationSnapshot(
         event_name: event.name,
         role: duty.role,
         required_skill: duty.requiredSkill,
+        forced_faculty_id: duty.forcedFacultyId,
         starts_at: event.startsAt.toISOString(),
         ends_at: event.endsAt.toISOString(),
         minutes: duty.minutes,
@@ -144,6 +145,7 @@ export async function createOptimizationProposal(args: {
   baseVersionId: number | null;
   mode: OptimizationMode;
   createdBy: string;
+  staffingRequestId?: string;
 }) {
   const { input, carriedAssignments } = await loadOptimizationSnapshot(args.baseVersionId, args.mode);
   const runStartedAt = Date.now();
@@ -174,13 +176,14 @@ export async function createOptimizationProposal(args: {
     return { result, proposal: null };
   }
   const existingByDuty = new Map(input.baseline.map((assignment) => [assignment.duty_id, assignment]));
+  const forcedDutyIds = new Set(input.duties.flatMap((duty) => duty.forced_faculty_id ? [duty.id] : []));
   const solverAssignments = result.assignments.map((assignment) => {
     const previous = existingByDuty.get(assignment.duty_id);
     const sameFaculty = previous?.faculty_id === assignment.faculty_id;
     return {
       facultyId: assignment.faculty_id,
       dutyId: assignment.duty_id,
-      protected: sameFaculty ? previous.protected : false,
+      protected: forcedDutyIds.has(assignment.duty_id) || (sameFaculty ? previous.protected : false),
       acknowledged: sameFaculty ? previous.acknowledged : false,
       changeWeight: sameFaculty ? previous.change_weight : 1,
     };
@@ -202,6 +205,7 @@ export async function createOptimizationProposal(args: {
           solverStats: result.solver_stats,
         } as Prisma.InputJsonValue,
         createdBy: args.createdBy,
+        ...(args.staffingRequestId ? { staffingRequest: { connect: { id: args.staffingRequestId } } } : {}),
         assignments: {
           create: [...carriedAssignments, ...solverAssignments],
         },
@@ -212,4 +216,14 @@ export async function createOptimizationProposal(args: {
     return version;
   });
   return { result, proposal };
+}
+
+export async function createLatestOptimizationProposal(args: { createdBy: string; staffingRequestId?: string }) {
+  const current = await prisma.scheduleVersion.findFirst({ where: { status: "PUBLISHED" }, orderBy: { id: "desc" } });
+  return createOptimizationProposal({
+    baseVersionId: current?.id ?? null,
+    mode: current ? "REPAIR" : "ALLOCATE",
+    createdBy: args.createdBy,
+    staffingRequestId: args.staffingRequestId,
+  });
 }

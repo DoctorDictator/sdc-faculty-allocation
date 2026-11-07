@@ -1,0 +1,56 @@
+﻿services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: facultyflow
+      POSTGRES_USER: facultyflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-facultyflow-local-db}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - facultyflow-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U facultyflow -d facultyflow"]
+      interval: 4s
+      timeout: 3s
+      retries: 20
+
+  optimizer:
+    build: ./services/optimizer
+    restart: unless-stopped
+    expose:
+      - "8000"
+    ports:
+      - "127.0.0.1:${OPTIMIZER_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: ./apps/web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      optimizer:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://facultyflow:${POSTGRES_PASSWORD:-facultyflow-local-db}@db:5432/facultyflow?schema=public
+      OPTIMIZER_URL: http://optimizer:8000
+      SCHEDULING_HORIZON_DAYS: ${SCHEDULING_HORIZON_DAYS:-90}
+      AUTH_SECRET: ${AUTH_SECRET:-local-only-change-this-auth-secret-before-deploy}
+      AUTH_TRUST_HOST: "true"
+      DEMO_HOD_EMAIL: ${DEMO_HOD_EMAIL:-hod@faculty.local}
+      DEMO_HOD_PASSWORD: ${DEMO_HOD_PASSWORD:-LocalOnly-HOD-2026}
+      DEMO_FACULTY_EMAIL: ${DEMO_FACULTY_EMAIL:-faculty@faculty.local}
+      DEMO_FACULTY_PASSWORD: ${DEMO_FACULTY_PASSWORD:-LocalOnly-Faculty-2026}
+    ports:
+      - "3001:3000"
+
+volumes:
+  facultyflow-db:
+

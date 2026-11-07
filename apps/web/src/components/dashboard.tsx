@@ -34,6 +34,7 @@ type Faculty = {
   id: string; employeeCode: string; name: string; title: string; department: string; skills: string[];
   active: boolean; hasLogin: boolean; loginEmail: string | null; targetMinutes: number; maxMinutes: number; committedMinutes: number; workloadMinutes: number; assignmentCount: number;
 };
+type FacultyChoice = { id: string; name: string; employeeCode: string; skills: string[] };
 type Duty = { id: string; role: string; requiredSkill: string | null; positionIndex: number; minutes: number; facultyId: string | null; assignmentId: string | null; protected: boolean; acknowledged: boolean; facultyName: string | null; assignedElsewhere: boolean };
 type EventItem = { id: string; name: string; startsAt: string; endsAt: string; priority: number; status: string; inPlanningWindow: boolean; dutyCount: number; assignedCount: number; duties: Duty[] };
 type StaffingRequest = {
@@ -41,9 +42,12 @@ type StaffingRequest = {
   requestedRole: string; requestedCount: number; reason: string | null; status: "PENDING" | "APPROVED" | "DECLINED";
   approvedRole: string | null; approvedCount: number | null; requiredSkill: string | null; responseNote: string | null;
   reviewedBy: string | null; reviewedAt: string | null; createdAt: string;
+  assignedFacultyNames: string[];
   requester: { name: string; employeeCode: string }; event: { id: string; name: string } | null;
+  proposal: { id: number; status: string } | null;
 };
-type Proposal = { id: number; status: string; solverStatus: string; createdAt: string; createdBy: string; assignmentCount: number; changedCount: number; mode: string; uncoveredCount: number };
+type Proposal = { id: number; status: string; solverStatus: string; createdAt: string; createdBy: string; assignmentCount: number; changedCount: number; mode: string; uncoveredCount: number; staffingRequest: { eventName: string; requesterName: string; requesterEmployeeCode: string } | null };
+type NotificationItem = { id: string; title: string; message: string; section: string; readAt: string | null; createdAt: string };
 type ScheduleVersionRow = { id: number; parentId: number | null; status: string; solverStatus: string; assignmentCount: number; createdBy: string; approvedBy: string | null; rejectedBy: string | null; createdAt: string; approvedAt: string | null; rejectedAt: string | null; rejectionReason: string | null };
 type PreferenceItem = { dutyId: string; eventName: string; startsAt: string; role: string; positionIndex: number; cost: number };
 type DisruptionItem = { id: string; type: string; startsAt: string | null; endsAt: string | null; reason: string | null; action: string | null; optimizerStatus: string | null; createdAt: string; facultyName: string | null; eventName: string | null; proposedVersionId: number | null; proposalStatus: string | null };
@@ -70,11 +74,13 @@ type DashboardData = {
   currentVersion: { id: number; createdAt: string } | null;
   optimizerOnline: boolean;
   planningHorizonDays: number;
-  stats: { activeFaculty: number; eventCount: number; dutyCount: number; assignedCount: number; openRoles: number; coveragePercent: number; conflictCount: number; maxWorkloadMinutes: number; workloadSpreadMinutes: number; openProposalCount: number; activeAbsenceCount: number };
+  stats: { activeFaculty: number; eventCount: number; dutyCount: number; assignedCount: number; openRoles: number; coveragePercent: number; conflictCount: number; maxWorkloadMinutes: number; workloadSpreadMinutes: number; openProposalCount: number; activeAbsenceCount: number; unreadNotificationCount: number };
   faculty: Faculty[];
+  facultyChoices: FacultyChoice[];
   events: EventItem[];
   staffingRequests: StaffingRequest[];
   proposals: Proposal[];
+  notifications: NotificationItem[];
   absences: Array<{ id: string; startsAt: string; endsAt: string; reason: string | null; faculty: { id: string; name: string } }>;
   preferences: PreferenceItem[];
   versions: ScheduleVersionRow[];
@@ -82,8 +88,8 @@ type DashboardData = {
   solverRuns: SolverRunItem[];
 };
 
-type Section = "Overview" | "Schedule" | "Scenarios" | "Faculty" | "Events" | "Requests" | "Availability" | "Preferences" | "Approvals";
-type EventRole = { role: string; requiredSkill: string; count: number };
+type Section = "Overview" | "Schedule" | "Scenarios" | "Faculty" | "Events" | "Requests" | "Availability" | "Preferences" | "Approvals" | "Notifications";
+type EventRole = { role: string; requiredSkill: string; count: number; facultyIds: string[] };
 
 const sections: { name: Section; icon: typeof LayoutDashboard; label: string }[] = [
   { name: "Overview", icon: LayoutDashboard, label: "Overview" },
@@ -95,6 +101,7 @@ const sections: { name: Section; icon: typeof LayoutDashboard; label: string }[]
   { name: "Availability", icon: Clock3, label: "Availability" },
   { name: "Preferences", icon: Sparkles, label: "My preferences" },
   { name: "Approvals", icon: ClipboardCheck, label: "Proposals" },
+  { name: "Notifications", icon: Bell, label: "Notifications" },
 ];
 
 function dateTimeField(offset: number, hour: number) {
@@ -149,8 +156,8 @@ export default function Dashboard({ user }: { user: User }) {
   const [proposalLoadingId, setProposalLoadingId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [eventRoles, setEventRoles] = useState<EventRole[]>([
-    { role: "Coordinator", requiredSkill: "coordination", count: 1 },
-    { role: "Invigilator", requiredSkill: "invigilation", count: 2 },
+    { role: "Coordinator", requiredSkill: "coordination", count: 1, facultyIds: [] },
+    { role: "Invigilator", requiredSkill: "invigilation", count: 2, facultyIds: [] },
   ]);
 
   const refresh = useCallback(async () => {
@@ -168,6 +175,10 @@ export default function Dashboard({ user }: { user: User }) {
   }, []);
 
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    const timer = window.setInterval(() => void refresh(), 30_000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(""), 4200);
@@ -323,6 +334,22 @@ export default function Dashboard({ user }: { user: User }) {
     }
   }
 
+  async function markNotificationsRead(id?: string) {
+    setError("");
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(id ? { id } : { markAll: true }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not update notifications.");
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not update notifications.");
+    }
+  }
+
   async function saveEvent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy("event");
@@ -345,12 +372,14 @@ export default function Dashboard({ user }: { user: User }) {
       if (!response.ok) throw new Error(result.error || "Could not add the event.");
       setModal(null);
       if (!editingEvent) setEventRoles([
-        { role: "Coordinator", requiredSkill: "coordination", count: 1 },
-        { role: "Invigilator", requiredSkill: "invigilation", count: 2 },
+        { role: "Coordinator", requiredSkill: "coordination", count: 1, facultyIds: [] },
+        { role: "Invigilator", requiredSkill: "invigilation", count: 2, facultyIds: [] },
       ]);
       setEditingEvent(null);
-      setToast(editingEvent ? result.proposalId ? `Event rescheduled. Repair proposal ${result.proposalId} is ready.` : result.warning || "Event rescheduled." : "Event added and recorded. Generate a schedule proposal when you are ready.");
-      setSection(editingEvent && result.proposalId ? "Approvals" : "Events");
+      setToast(editingEvent
+        ? result.proposalId ? `Event rescheduled. Repair proposal V${result.proposalId} is ready for approval.` : result.warning || "Event rescheduled."
+        : result.proposalId ? `Event added. Allocation V${result.proposalId} is ready for your approval.` : result.warning || "Event added.");
+      setSection(result.proposalId ? "Approvals" : "Events");
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not add the event.");
@@ -371,6 +400,7 @@ export default function Dashboard({ user }: { user: User }) {
       requestedRole: String(form.get("requestedRole") || "").trim(),
       requestedCount: Number(form.get("requestedCount") || 1),
       reason: String(form.get("reason") || "").trim(),
+      preferredFacultyIds: form.getAll("preferredFacultyIds").filter((id): id is string => typeof id === "string"),
     };
     try {
       const response = await fetch("/api/event-requests", {
@@ -382,7 +412,9 @@ export default function Dashboard({ user }: { user: User }) {
       if (!response.ok) throw new Error(result.error || "Could not send the staffing request.");
       setModal(null);
       setSection("Requests");
-      setToast("Staffing request sent to the HOD.");
+      setToast(result.proposalId
+        ? `Request sent. Allocation V${result.proposalId} is awaiting HOD approval.`
+        : result.warning || "Request saved and sent to the HOD.");
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not send the staffing request.");
@@ -391,32 +423,18 @@ export default function Dashboard({ user }: { user: User }) {
     }
   }
 
-  async function reviewStaffingRequest(id: string, decision: {
-    action: "approve" | "decline";
-    approvedRole?: string;
-    approvedCount?: number;
-    requiredSkill?: string;
-    responseNote?: string;
-  }) {
-    setBusy(`staffing-request-${id}`);
+  async function retryStaffingAllocation(id: string) {
+    setBusy(`retry-request-${id}`);
     setError("");
     try {
-      const response = await fetch(`/api/event-requests/${id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(decision),
-      });
+      const response = await fetch(`/api/event-requests/${id}`, { method: "POST" });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not review the staffing request.");
-      if (decision.action === "approve") {
-        setToast("Request approved and added to Events. Generate a proposal to assign faculty.");
-        setSection("Events");
-      } else {
-        setToast("Staffing request declined.");
-      }
+      if (!response.ok) throw new Error(result.error || "Could not generate this allocation.");
+      setSection("Approvals");
+      setToast(`Allocation V${result.proposalId} is ready for HOD approval.`);
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not review the staffing request.");
+      setError(cause instanceof Error ? cause.message : "Could not generate this allocation.");
     } finally {
       setBusy("");
     }
@@ -465,8 +483,8 @@ export default function Dashboard({ user }: { user: User }) {
   function openNewEvent() {
     setEditingEvent(null);
     setEventRoles([
-      { role: "Coordinator", requiredSkill: "coordination", count: 1 },
-      { role: "Invigilator", requiredSkill: "invigilation", count: 2 },
+      { role: "Coordinator", requiredSkill: "coordination", count: 1, facultyIds: [] },
+      { role: "Invigilator", requiredSkill: "invigilation", count: 2, facultyIds: [] },
     ]);
     setError("");
     setModal("event");
@@ -543,7 +561,8 @@ export default function Dashboard({ user }: { user: User }) {
             <button className={`nav-item ${section === name ? "active" : ""}`} key={name} onClick={() => { setSection(name); setMobileNavOpen(false); }}>
               <Icon size={17} strokeWidth={1.9} /><span>{label}</span>
               {name === "Approvals" && Boolean(data?.stats.openProposalCount) && <span className="nav-count">{data?.stats.openProposalCount}</span>}
-              {name === "Requests" && isHod && Boolean(data?.staffingRequests.filter((request) => request.status === "PENDING").length) && <span className="nav-count">{data?.staffingRequests.filter((request) => request.status === "PENDING").length}</span>}
+              {name === "Requests" && Boolean(data?.staffingRequests.filter((request) => request.status === "PENDING").length) && <span className="nav-count">{data?.staffingRequests.filter((request) => request.status === "PENDING").length}</span>}
+              {name === "Notifications" && Boolean(data?.stats.unreadNotificationCount) && <span className="nav-count">{data?.stats.unreadNotificationCount}</span>}
             </button>
           ))}
         </nav>
@@ -559,12 +578,12 @@ export default function Dashboard({ user }: { user: User }) {
         <header className="topbar">
           <button className="icon-button mobile-menu" aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen((open) => !open)}><Menu size={20} /></button>
           <div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14} /><strong>{sectionTitle}</strong></div>
-          <div className="topbar-right"><ThemeToggle /><div className="date-chip"><CalendarDays size={15} />{today}</div><span className="topbar-divider" /><button className="icon-button notification-button" title="Notifications" onClick={() => setSection("Approvals")}><Bell size={17} />{Boolean(data?.stats.openProposalCount) && <i />}</button><span className="avatar avatar-small">{initials(user.name)}</span></div>
+          <div className="topbar-right"><ThemeToggle /><div className="date-chip"><CalendarDays size={15} />{today}</div><span className="topbar-divider" /><button className="icon-button notification-button" title="Notifications" onClick={() => setSection("Notifications")}><Bell size={17} />{Boolean(data?.stats.unreadNotificationCount) && <i />}</button><span className="avatar avatar-small">{initials(user.name)}</span></div>
         </header>
 
         <div className="page-content">
           <div className="page-heading">
-            <div><div className="eyebrow">{isHod ? "DEPARTMENT OPERATIONS" : "FACULTY WORKSPACE"}</div><h1>{section === "Overview" ? `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user.name.split(" ")[0]}` : sectionTitle}</h1><p>{section === "Overview" ? "Your department schedule, workload and changes in one place." : section === "Schedule" ? "A clear view of who is assigned, when and where." : section === "Scenarios" ? "Explore a hypothetical absence and see the likely schedule repair without changing the live plan." : section === "Faculty" ? "Skills, availability and workload at a glance." : section === "Events" ? "Create academic activities and define the roles they need." : section === "Requests" ? isHod ? "Review staffing requests, set the roles and headcount, then decide which duties enter the schedule." : "Request people for an event and track the HOD’s decision." : section === "Availability" ? "Review reported time away and correct availability records." : section === "Preferences" ? "Tell the planner which duties fit you best." : "Review solver proposals before anything goes live."}</p></div>
+            <div><div className="eyebrow">{isHod ? "DEPARTMENT OPERATIONS" : "FACULTY WORKSPACE"}</div><h1>{section === "Overview" ? `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user.name.split(" ")[0]}` : sectionTitle}</h1><p>{section === "Overview" ? "Your department schedule, workload and changes in one place." : section === "Schedule" ? "A clear view of who is assigned, when and where." : section === "Scenarios" ? "Explore a hypothetical absence and see the likely schedule repair without changing the live plan." : section === "Faculty" ? "Skills, availability and workload at a glance." : section === "Events" ? "Create academic activities and define the roles they need." : section === "Requests" ? isHod ? "Faculty requests automatically enter the allocation queue. Approve or reject the allocation once." : "Request people for an event and track its allocation approval." : section === "Availability" ? "Review reported time away and correct availability records." : section === "Preferences" ? "Tell the planner which duties fit you best." : section === "Notifications" ? "Assignment and request updates from your department schedule." : "Review and approve the latest allocation proposals."}</p></div>
             <div className="heading-actions">
               <button className="button button-secondary" onClick={() => setModal("absence")}><CircleAlert size={16} />Report absence</button>
               {!isHod && section === "Requests" && <button className="button button-primary" onClick={() => { setError(""); setModal("request"); }}><Plus size={16} />Request event staff</button>}
@@ -580,10 +599,11 @@ export default function Dashboard({ user }: { user: User }) {
               {section === "Scenarios" && isHod && <ScenarioSection faculty={data.faculty} optimizerOnline={data.optimizerOnline} planningHorizonDays={data.planningHorizonDays} />}
               {section === "Faculty" && <FacultySection faculty={visibleFaculty} search={search} setSearch={setSearch} reportAbsence={() => setModal("absence")} isHod={isHod} addFaculty={() => openFacultyForm()} editFaculty={openFacultyForm} />}
               {section === "Events" && <EventsSection events={data.events} isHod={isHod} openEvent={openNewEvent} reschedule={openEventReschedule} cancelEvent={cancelEvent} busy={busy} />}
-              {section === "Requests" && <StaffingRequestsSection requests={data.staffingRequests} isHod={isHod} busy={busy} decide={reviewStaffingRequest} onNew={() => { setError(""); setModal("request"); }} />}
+              {section === "Requests" && <StaffingRequestsSection requests={data.staffingRequests} isHod={isHod} busy={busy} retry={retryStaffingAllocation} onNew={() => { setError(""); setModal("request"); }} />}
               {section === "Availability" && <AvailabilitySection absences={data.absences} isHod={isHod} busy={busy} removeAbsence={removeAbsence} />}
               {section === "Preferences" && <PreferencesSection preferences={data.preferences} busy={busy} save={savePreference} />}
               {section === "Approvals" && <ApprovalsSection proposals={data.proposals} isHod={isHod} busy={busy} approve={approveProposal} reject={rejectProposal} generate={generateProposal} details={proposalDetails} openId={openProposalId} loadingId={proposalLoadingId} toggleDetails={toggleProposalDetails} optimizerOnline={data.optimizerOnline} />}
+              {section === "Notifications" && <NotificationsSection notifications={data.notifications} unreadCount={data.stats.unreadNotificationCount} markRead={markNotificationsRead} />}
             </>
           ) : <div className="empty-workspace"><CircleAlert size={22} /><h2>Workspace unavailable</h2><p>{error || "Refresh the page to retry."}</p><button className="button button-primary" onClick={() => void refresh()}>Try again</button></div>}
           <footer className="page-footer"><span>FacultyFlow <i>·</i> Department scheduling workspace</span><span>All proposals require review before publishing.</span></footer>
@@ -597,8 +617,18 @@ export default function Dashboard({ user }: { user: User }) {
             <label className="form-label">Event name<input name="name" defaultValue={editingEvent?.name ?? ""} placeholder="e.g. Semester 5 midterm" minLength={3} maxLength={160} required={!editingEvent} disabled={Boolean(editingEvent)} /></label>
             <div className="form-grid"><label className="form-label">Starts<input name="startsAt" type="datetime-local" defaultValue={editingEvent ? localDateTime(editingEvent.startsAt) : dateTimeField(1, 10)} required /></label><label className="form-label">Ends<input name="endsAt" type="datetime-local" defaultValue={editingEvent ? localDateTime(editingEvent.endsAt) : dateTimeField(1, 12)} required /></label></div>
             <label className="form-label">Priority<select name="priority" defaultValue={String(editingEvent?.priority ?? 2)}><option value="1">Standard</option><option value="2">Important</option><option value="3">Critical</option></select></label>
-            {!editingEvent && <><div className="role-builder-title"><span>Required roles</span><button className="text-button" type="button" onClick={() => setEventRoles((roles) => [...roles, { role: "New role", requiredSkill: "invigilation", count: 1 }])}><Plus size={14} />Add role</button></div>
-            <div className="role-builder">{eventRoles.map((role, index) => <div className="role-row" key={`${index}-${role.role}`}><input aria-label="Role name" value={role.role} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, role: event.target.value } : item))} required /><input aria-label="Required skill" value={role.requiredSkill} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, requiredSkill: event.target.value } : item))} required /><select aria-label="Number of positions" value={role.count} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, count: Number(event.target.value) } : item))}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} {value === 1 ? "position" : "positions"}</option>)}</select><button type="button" aria-label="Remove role" className="icon-button remove-role" disabled={eventRoles.length <= 1} onClick={() => setEventRoles((roles) => roles.filter((_, itemIndex) => itemIndex !== index))}><X size={15} /></button></div>)}</div></>}
+            {!editingEvent && <><div className="role-builder-title"><span>Required roles</span><button className="text-button" type="button" onClick={() => setEventRoles((roles) => [...roles, { role: "New role", requiredSkill: "invigilation", count: 1, facultyIds: [] }])}><Plus size={14} />Add role</button></div>
+            <div className="role-builder">{eventRoles.map((role, index) => <div className="role-editor" key={`${index}-${role.role}`}>
+              <div className="role-row">
+                <input aria-label="Role name" value={role.role} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, role: event.target.value } : item))} required />
+                <input aria-label="Required skill" value={role.requiredSkill} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, requiredSkill: event.target.value, facultyIds: [] } : item))} required />
+                <select aria-label="Number of positions" value={role.count} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex === index ? { ...item, count: Number(event.target.value), facultyIds: item.facultyIds.slice(0, Number(event.target.value)) } : item))}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} {value === 1 ? "position" : "positions"}</option>)}</select>
+                <button type="button" aria-label="Remove role" className="icon-button remove-role" disabled={eventRoles.length <= 1} onClick={() => setEventRoles((roles) => roles.filter((_, itemIndex) => itemIndex !== index))}><X size={15} /></button>
+              </div>
+              <details className="faculty-picker"><summary>Choose faculty <span>{role.facultyIds.length ? `${role.facultyIds.length} selected` : "Optional · planner fills remaining positions"}</span></summary>
+                <div className="faculty-picker-list">{(data?.facultyChoices ?? []).filter((person) => person.skills.some((skill) => skill.toLowerCase() === role.requiredSkill.toLowerCase())).map((person) => <label key={person.id}><input type="checkbox" checked={role.facultyIds.includes(person.id)} disabled={!role.facultyIds.includes(person.id) && (role.facultyIds.length >= role.count || eventRoles.some((other, otherIndex) => otherIndex !== index && other.facultyIds.includes(person.id)))} onChange={(event) => setEventRoles((roles) => roles.map((item, itemIndex) => itemIndex !== index ? item : { ...item, facultyIds: event.target.checked ? [...item.facultyIds, person.id] : item.facultyIds.filter((id) => id !== person.id) }))} /><span>{person.name}<small>{person.employeeCode}</small></span></label>)}{!(data?.facultyChoices ?? []).some((person) => person.skills.some((skill) => skill.toLowerCase() === role.requiredSkill.toLowerCase())) && <small className="faculty-picker-empty">No active faculty have this skill.</small>}</div>
+              </details>
+            </div>)}</div><div className="modal-note"><Users size={17} /><span>Selecting faculty assigns them to those roles; leave it blank and the planner matches qualified, available people. The HOD approves the generated allocation once.</span></div></>}
             {error && <div className="form-error" role="alert">{error}</div>}
             <div className="modal-actions"><button className="button button-secondary" type="button" onClick={() => { setModal(null); setEditingEvent(null); }}>Cancel</button><button className="button button-primary" type="submit" disabled={busy === "event"}>{busy === "event" ? "Saving…" : editingEvent ? "Save schedule change" : "Add event"}</button></div>
           </form> : modal === "absence" ? <form className="modal-form" onSubmit={saveAbsence}>
@@ -613,7 +643,8 @@ export default function Dashboard({ user }: { user: User }) {
             <div className="form-grid"><label className="form-label">Starts<input name="startsAt" type="datetime-local" defaultValue={dateTimeField(7, 10)} required /></label><label className="form-label">Ends<input name="endsAt" type="datetime-local" defaultValue={dateTimeField(7, 12)} required /></label></div>
             <div className="form-grid"><label className="form-label">Role or task needed<input name="requestedRole" placeholder="e.g. Invigilator" minLength={2} maxLength={80} required /></label><label className="form-label">People needed<input name="requestedCount" type="number" min="1" max="30" defaultValue="2" required /></label></div>
             <label className="form-label">Why are they needed? <span className="optional-label">Optional</span><textarea name="reason" rows={3} maxLength={500} placeholder="Add a short note for the HOD" /></label>
-            <div className="modal-note"><Users size={17} /><span>The HOD reviews every request and sets the final role, staff count, and qualification before adding it to the schedule.</span></div>
+            <details className="faculty-picker request-faculty-picker"><summary>Suggest faculty <span>Optional · HOD has final approval</span></summary><div className="faculty-picker-list">{(data?.facultyChoices ?? []).map((person) => <label key={person.id}><input type="checkbox" name="preferredFacultyIds" value={person.id} /><span>{person.name}<small>{person.employeeCode}</small></span></label>)}</div></details>
+            <div className="modal-note"><Users size={17} /><span>Your request creates an allocation automatically. Suggested faculty are treated as preferences; the HOD approves the proposed allocation once.</span></div>
             {error && <div className="form-error" role="alert">{error}</div>}
             <div className="modal-actions"><button className="button button-secondary" type="button" onClick={() => setModal(null)}>Cancel</button><button className="button button-primary" type="submit" disabled={busy === "staffing-request"}>{busy === "staffing-request" ? "Sending…" : "Send request"}</button></div>
           </form> : <form className="modal-form" onSubmit={saveFaculty}>
@@ -790,61 +821,48 @@ function PreferencesSection({ preferences, busy, save }: { preferences: Preferen
     </section></div>;
 }
 
-function StaffingRequestsSection({ requests, isHod, busy, decide, onNew }: {
+function StaffingRequestsSection({ requests, isHod, busy, retry, onNew }: {
   requests: StaffingRequest[];
   isHod: boolean;
   busy: string;
-  decide: (id: string, decision: { action: "approve" | "decline"; approvedRole?: string; approvedCount?: number; requiredSkill?: string; responseNote?: string }) => void;
+  retry: (id: string) => void;
   onNew: () => void;
 }) {
   const pendingCount = requests.filter((request) => request.status === "PENDING").length;
   return <div className="section-stack">
     <section className="panel staffing-requests-panel">
-      <div className="panel-heading"><div><div className="eyebrow">EVENT STAFFING</div><h2>{isHod ? "Faculty requests" : "Your requests"}</h2></div><span className="proposal-total">{isHod ? `${pendingCount} awaiting review` : `${requests.length} total`}</span></div>
-      {!isHod && <div className="staffing-request-intro"><strong>Need people for an event?</strong><span>Send the event details, task, and headcount. The HOD sets the final staffing and skill requirements.</span><button className="button button-primary button-compact" onClick={onNew}><Plus size={14} />Request event staff</button></div>}
-      {requests.length ? <div className="staffing-request-list">{requests.map((request) => <StaffingRequestCard key={request.id} request={request} isHod={isHod} busy={busy} decide={decide} />)}</div> : <div className="empty-request-state"><strong>{isHod ? "No faculty requests yet" : "No event staffing requests yet"}</strong><span>{isHod ? "Faculty requests for event staff will appear here for your review." : "Submit an event request and track the HOD’s decision here."}</span></div>}
+      <div className="panel-heading"><div><div className="eyebrow">EVENT STAFFING</div><h2>{isHod ? "Faculty requests" : "Your requests"}</h2></div><span className="proposal-total">{isHod ? `${pendingCount} awaiting allocation approval` : `${requests.length} total`}</span></div>
+      {!isHod && <div className="staffing-request-intro"><strong>Need people for an event?</strong><span>Send the details once. Faculty suggestions inform the planner, and the HOD approves the resulting allocation.</span><button className="button button-primary button-compact" onClick={onNew}><Plus size={14} />Request event staff</button></div>}
+      {requests.length ? <div className="staffing-request-list">{requests.map((request) => <StaffingRequestCard key={request.id} request={request} isHod={isHod} busy={busy} retry={retry} />)}</div> : <div className="empty-request-state"><strong>{isHod ? "No faculty requests yet" : "No event staffing requests yet"}</strong><span>{isHod ? "Faculty requests and their generated allocations will appear here." : "Submit an event request and track its allocation here."}</span></div>}
     </section>
-    <div className="event-tip"><ClipboardList size={17} /><span><strong>{isHod ? "You control the final staffing request." : "The HOD decides the final staffing."}</strong> {isHod ? "Adjust the role, number of people, and qualification before approval. Approved duties enter Events; generate and review a schedule proposal to assign faculty." : "Approved requests become event duties. The HOD reviews the proposed faculty assignments before publishing the schedule."}</span></div>
+    <div className="event-tip"><ClipboardList size={17} /><span><strong>One approval publishes the allocation.</strong> Requests create event duties and a schedule proposal automatically. The HOD approves or rejects the allocation; assigned faculty are notified when it is published.</span></div>
   </div>;
 }
 
-function StaffingRequestCard({ request, isHod, busy, decide }: {
-  request: StaffingRequest;
-  isHod: boolean;
-  busy: string;
-  decide: (id: string, decision: { action: "approve" | "decline"; approvedRole?: string; approvedCount?: number; requiredSkill?: string; responseNote?: string }) => void;
-}) {
-  const [approvedRole, setApprovedRole] = useState(request.approvedRole ?? request.requestedRole);
-  const [approvedCount, setApprovedCount] = useState(request.approvedCount ?? request.requestedCount);
-  const [requiredSkill, setRequiredSkill] = useState(request.requiredSkill ?? "");
-  const [responseNote, setResponseNote] = useState(request.responseNote ?? "");
-  const isBusy = busy === `staffing-request-${request.id}`;
-  const statusLabel = request.status === "PENDING" ? "Awaiting review" : request.status === "APPROVED" ? "Approved" : "Declined";
-
+function StaffingRequestCard({ request, isHod, busy, retry }: { request: StaffingRequest; isHod: boolean; busy: string; retry: (id: string) => void }) {
+  const statusLabel = request.status === "PENDING" ? "Awaiting HOD allocation approval" : request.status === "APPROVED" ? "Allocation published" : "Allocation declined";
   return <article className="staffing-request-card">
     <div className="staffing-request-header">
-      <div><span className={`staffing-request-status request-${request.status.toLowerCase()}`}>{statusLabel}</span><h3>{request.eventName}</h3><p>{shortDate(request.startsAt)} · {timeRange(request.startsAt, request.endsAt)}</p></div>
-      {isHod && <span className="staffing-requester">{request.requester.name} · {request.requester.employeeCode}</span>}
+      <div><span className={`staffing-request-status request-${request.status.toLowerCase()}`}>{statusLabel}</span><h3>{request.eventName}</h3><p>{shortDate(request.startsAt)} | {timeRange(request.startsAt, request.endsAt)}</p></div>
+      {isHod && <span className="staffing-requester">{request.requester.name} | {request.requester.employeeCode}</span>}
     </div>
     <div className="staffing-request-details"><span><strong>Requested:</strong> {request.requestedCount} people for {request.requestedRole}</span>{request.reason && <p>{request.reason}</p>}</div>
-    {request.status === "APPROVED" && <div className="staffing-approved-detail"><CheckCircle2 size={15} /><span>Approved for {request.approvedCount} {request.approvedRole}{request.requiredSkill ? ` · skill: ${request.requiredSkill}` : " · any skill"}{request.event && ` · added to Events`}</span></div>}
+    {request.assignedFacultyNames.length > 0 && <div className="staffing-response-note"><strong>Suggested faculty:</strong> {request.assignedFacultyNames.join(", ")}</div>}
+    {request.status === "PENDING" && request.proposal && <div className="staffing-approved-detail"><ClipboardCheck size={15} /><span>Allocation V{request.proposal.id} is waiting for the HOD.</span></div>}
+    {request.status === "PENDING" && !request.proposal && isHod && <div className="staffing-retry-row"><span>No allocation proposal was generated.</span><button className="button button-secondary button-compact" disabled={busy.startsWith("retry-request-")} onClick={() => retry(request.id)}>{busy === `retry-request-${request.id}` ? "Generating..." : "Generate proposal"}</button></div>}
+    {request.status === "APPROVED" && <div className="staffing-approved-detail"><CheckCircle2 size={15} /><span>Published allocation for {request.approvedCount ?? request.requestedCount} {request.approvedRole ?? request.requestedRole}{request.event && " | added to Events"}</span></div>}
     {request.responseNote && <div className="staffing-response-note"><strong>HOD note:</strong> {request.responseNote}</div>}
-    {isHod && request.status === "PENDING" && <form className="staffing-review-form" onSubmit={(event) => { event.preventDefault(); decide(request.id, { action: "approve", approvedRole, approvedCount, requiredSkill, responseNote }); }}>
-      <div className="staffing-review-title"><strong>Set approved staffing</strong><span>You can adjust the request before creating event duties.</span></div>
-      <div className="staffing-review-fields">
-        <label className="form-label">Role or task<input value={approvedRole} minLength={2} maxLength={80} onChange={(event) => setApprovedRole(event.target.value)} required /></label>
-        <label className="form-label">People assigned<input type="number" value={approvedCount} min={1} max={30} onChange={(event) => setApprovedCount(Number(event.target.value))} required /></label>
-        <label className="form-label">Required skill <span className="optional-label">Optional</span><input value={requiredSkill} maxLength={80} placeholder="Leave blank for any skill" onChange={(event) => setRequiredSkill(event.target.value)} /></label>
-      </div>
-      <label className="form-label">Response note <span className="optional-label">Optional</span><input value={responseNote} maxLength={500} placeholder="A note for the requesting faculty member" onChange={(event) => setResponseNote(event.target.value)} /></label>
-      <div className="staffing-review-actions">
-        <button className="button button-secondary button-compact" type="button" disabled={busy.startsWith("staffing-request-")} onClick={() => decide(request.id, { action: "decline", responseNote })}>{isBusy ? "Saving…" : "Decline request"}</button>
-        <button className="button button-primary button-compact" type="submit" disabled={busy.startsWith("staffing-request-") || approvedCount < 1 || !approvedRole.trim()}>{isBusy ? "Approving…" : "Approve & add to Events"}</button>
-      </div>
-    </form>}
   </article>;
 }
 
+function NotificationsSection({ notifications, unreadCount, markRead }: { notifications: NotificationItem[]; unreadCount: number; markRead: (id?: string) => void }) {
+  return <div className="section-stack"><section className="panel notifications-panel">
+    <div className="panel-heading"><div><div className="eyebrow">UPDATES</div><h2>Your notifications</h2></div>{unreadCount > 0 && <button className="button button-secondary button-compact" onClick={() => markRead()}>Mark all read</button>}</div>
+    {notifications.length ? <div className="notification-list">{notifications.map((item) => <button className={`notification-row ${item.readAt ? "notification-read" : "notification-unread"}`} key={item.id} onClick={() => !item.readAt && markRead(item.id)}>
+      <span className="notification-row-icon">{item.readAt ? <Check size={15} /> : <Bell size={15} />}</span><span className="notification-row-copy"><strong>{item.title}</strong><span>{item.message}</span><small>{shortDate(item.createdAt)} | {new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" }).format(new Date(item.createdAt))}</small></span>
+    </button>)}</div> : <EmptyInline title="You're all caught up" body="When a schedule is published or a request is decided, updates will appear here." />}
+  </section></div>;
+}
 function EventsSection({ events, isHod, openEvent, reschedule, cancelEvent, busy }: { events: EventItem[]; isHod: boolean; openEvent: () => void; reschedule: (event: EventItem) => void; cancelEvent: (event: EventItem) => void; busy: string }) {
   return <div className="section-stack"><section className="panel events-page-panel"><div className="panel-heading"><div><div className="eyebrow">EVENT REGISTER</div><h2>Activities requiring coverage</h2></div>{isHod && <button className="button button-primary button-compact" onClick={openEvent}><Plus size={15} />Add event</button>}</div>
     {events.length ? <div className="event-register">{events.map((event) => <div className="event-register-row" key={event.id}><span className={`event-type-icon ${classForPriority(event.priority)}`}><CalendarDays size={18} /></span><div className="event-register-main"><strong>{event.name}</strong>{!event.inPlanningWindow && <span className="outside-horizon-tag">Outside current planning window</span>}<span>{shortDate(event.startsAt)} · {timeRange(event.startsAt, event.endsAt)} · {event.dutyCount} roles</span></div><div className="event-progress"><div><span>{event.assignedCount}/{event.dutyCount} covered</span><strong>{event.dutyCount ? Math.round(event.assignedCount / event.dutyCount * 100) : 0}%</strong></div><div className="progress-track"><i style={{ width: `${event.dutyCount ? event.assignedCount / event.dutyCount * 100 : 0}%` }} /></div></div><span className={`event-priority ${classForPriority(event.priority)}`}>{event.priority >= 3 ? "Critical" : event.priority === 2 ? "Important" : "Standard"}</span>{isHod && <div className="event-register-actions"><button className="table-action" onClick={() => reschedule(event)}>Reschedule</button><button className="table-action table-action-danger" onClick={() => void cancelEvent(event)} disabled={busy === `cancel-${event.id}`}>{busy === `cancel-${event.id}` ? "Cancelling…" : "Cancel"}</button></div>}</div>)}</div> : <EmptyInline title="No upcoming events" body="Add academic events and the roles each one needs." action={isHod ? <button className="button button-primary button-compact" onClick={openEvent}><Plus size={15} />Add event</button> : undefined} />}
@@ -922,8 +940,7 @@ function ApprovalsSection({ proposals, isHod, busy, approve, reject, generate, d
   return <div className="section-stack">
     <div className="approval-intro panel">
       <span className="approval-intro-icon"><ShieldCheck size={20} /></span>
-      <div><strong>People stay in control</strong><p>Review coverage, changes and solver priorities before publishing a new schedule version.</p></div>
-      {isHod && <button className="button button-secondary button-compact" onClick={() => void generate()} disabled={!optimizerOnline}><Sparkles size={15} />Run optimizer</button>}
+      <div><strong>One approval publishes an allocation</strong><p>New events and faculty requests generate a proposal automatically. Review details if needed, then approve or reject the allocation.</p></div>
     </div>
     <section className="panel proposal-list-panel">
       <div className="panel-heading"><div><div className="eyebrow">HOD REVIEW</div><h2>Schedule proposals</h2></div><span className="proposal-total">{proposals.length} awaiting review</span></div>
@@ -932,13 +949,13 @@ function ApprovalsSection({ proposals, isHod, busy, approve, reject, generate, d
           <div className="proposal-icon"><Sparkles size={17} /></div>
           <div className="proposal-main">
             <div className="proposal-card-title"><h3>Schedule proposal <span>V{proposal.id}</span></h3><span className={proposal.solverStatus === "OPTIMAL" ? "solver-status solver-optimal" : "solver-status solver-feasible"}><i />{proposal.solverStatus}</span></div>
-            <p>{proposal.mode === "ALLOCATE" ? "Initial allocation" : proposal.mode === "REPAIR" ? "Disruption repair" : "Department rebalance"} | created by {proposal.createdBy} | {shortDate(proposal.createdAt)}</p>
+            <p>{proposal.staffingRequest ? `Staffing request from ${proposal.staffingRequest.requesterName} · ${proposal.staffingRequest.eventName}` : proposal.mode === "ALLOCATE" ? "Initial allocation" : proposal.mode === "REPAIR" ? "Disruption repair" : "Department rebalance"} | created by {proposal.createdBy} | {shortDate(proposal.createdAt)}</p>
             <div className="proposal-metrics"><span><strong>{proposal.assignmentCount}</strong> assigned roles</span><span><strong>{proposal.changedCount}</strong> changes from baseline</span><span className={proposal.uncoveredCount ? "metric-uncovered" : ""}><strong>{proposal.uncoveredCount}</strong> uncovered</span></div>
             {isHod && <button className="proposal-review-toggle" aria-expanded={openId === proposal.id} onClick={() => void toggleDetails(proposal.id)}>{loadingId === proposal.id ? "Loading review details..." : openId === proposal.id ? "Hide review details" : "Review full allocation"} <ChevronDown size={14} /></button>}
           </div>
           <div className="proposal-actions">{isHod ? <>
             <button className="button button-secondary button-compact" onClick={() => void reject(proposal.id)} disabled={busy === "reject-" + proposal.id}>{busy === "reject-" + proposal.id ? "Rejecting..." : "Reject"}</button>
-            <button className="button button-primary button-compact" onClick={() => void approve(proposal.id)} disabled={busy === "approve-" + proposal.id || !details[proposal.id] || details[proposal.id].isStale} title={!details[proposal.id] ? "Review the full allocation before publishing." : details[proposal.id].isStale ? "Scheduling inputs changed. Generate a new proposal before publishing." : undefined}>{busy === "approve-" + proposal.id ? "Publishing..." : details[proposal.id]?.isStale ? "Stale proposal" : <>Approve &amp; publish <ArrowRight size={15} /></>}</button>
+            <button className="button button-primary button-compact" onClick={() => void approve(proposal.id)} disabled={busy === "approve-" + proposal.id || Boolean(details[proposal.id]?.isStale)} title={details[proposal.id]?.isStale ? "Scheduling inputs changed. Generate a fresh proposal." : undefined}>{busy === "approve-" + proposal.id ? "Publishing..." : details[proposal.id]?.isStale ? "Stale proposal" : <>Approve &amp; publish <ArrowRight size={15} /></>}</button>
           </> : <span className="pending-review">Awaiting HOD</span>}</div>
           {isHod && openId === proposal.id && <ProposalReviewContent detail={details[proposal.id]} loading={loadingId === proposal.id} />}
         </article>

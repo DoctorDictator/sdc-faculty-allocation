@@ -27,6 +27,7 @@ class Duty(BaseModel):
     event_name: str
     role: str = Field(min_length=1, max_length=80)
     required_skill: str | None = None
+    forced_faculty_id: str | None = None
     starts_at: datetime
     ends_at: datetime
     minutes: int = Field(gt=0, le=1_440)
@@ -98,6 +99,8 @@ class OptimizeRequest(BaseModel):
         for duty in self.duties:
             if any(cost < 0 or cost > 20 for cost in duty.preference_costs.values()):
                 raise ValueError(f"Preference costs must be between 0 and 20 for duty {duty.id}")
+            if duty.forced_faculty_id and duty.forced_faculty_id not in faculty_id_set:
+                raise ValueError(f"Forced faculty must reference included faculty for duty {duty.id}")
         return self
 
 
@@ -162,6 +165,16 @@ def solve_allocation(request: OptimizeRequest) -> dict:
             + unfilled[duty.id]
             == 1
         )
+
+    # HOD-selected people are hard constraints. If they are inactive, unqualified,
+    # unavailable, or conflict with another hard constraint, the proposal is infeasible.
+    for duty in request.duties:
+        if duty.forced_faculty_id:
+            selected = x.get((duty.forced_faculty_id, duty.id))
+            if selected is None:
+                model.add(unfilled[duty.id] == 0)
+            else:
+                model.add(selected == 1)
 
     # A faculty member cannot serve overlapping duties (including configured rest).
     for person in request.faculty:

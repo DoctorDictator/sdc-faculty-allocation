@@ -20,7 +20,7 @@ Local demo accounts:
 | HOD | `hod@faculty.local` | `LocalOnly-HOD-2026` |
 | Faculty | `faculty@faculty.local` | `LocalOnly-Faculty-2026` |
 
-The HOD can generate allocation or rebalance proposals, add events and roles, record absences, review changes, manage faculty sign-ins, and publish approved schedule versions. Faculty accounts can view their own assignments, set duty preferences, and report their own absences. The solver never writes to the published version; a proposal becomes live only after an HOD approval transaction confirms its baseline and input snapshot are still current.
+The HOD can create events, optionally select faculty for specific roles, record absences, review allocations, manage faculty sign-ins, and publish approved schedule versions. Faculty accounts can view their own assignments, set duty preferences, request event staffing, suggest faculty for those requests, and report their own absences. New events and staffing requests automatically create an allocation proposal. The HOD approves or rejects that allocation once; published assignment changes appear as in-app notifications for faculty with sign-in accounts. The solver never writes to the published version; approval confirms its baseline and input snapshot are still current.
 
 ## Public CSE faculty directory
 
@@ -54,7 +54,7 @@ The Compose service uses `OPTIMIZER_URL=http://optimizer:8000`. When running the
 ## Workflows in this version
 
 - **Initial allocation:** CP-SAT assigns qualified and available faculty, prevents overlapping duties, respects maximum workload, and balances the highest workload before preferences.
-- **Faculty event staffing requests:** faculty can request an event with its date, time, task and headcount. The HOD can adjust the role, count and qualification, then approve it into the event register or decline it with a note. Approved duties enter the normal optimizer proposal; the HOD reviews and publishes the faculty assignments.
+- **One-pass event staffing:** faculty can request an event with its date, time, task, headcount, and optional preferred faculty. The request immediately creates event duties and a schedule proposal. HOD-created events can include named faculty selections; those selections are held to the chosen roles while remaining positions are assigned by the optimizer. Faculty suggestions are preferences, not locks. The HOD reviews and approves or rejects the resulting allocation in one decision. Assignees and the request owner receive in-app updates after publication or rejection.
 - **Rolling planning:** the optimizer works over the next 90 days by default. Change `SCHEDULING_HORIZON_DAYS` from 7 to 365 days to adjust the window; assignments beyond it are carried into new versions until they enter the active window.
 - **Dynamic repair:** an absence, event change, or faculty profile update is recorded and asks CP-SAT to cover affected roles while minimizing changes. HODs can also preview a hypothetical absence in the Scenario Lab without changing live data.
 - **Proposal governance:** each solution is stored as a candidate schedule version. HOD review shows the complete roster, changed assignments, uncovered roles, explanations, and objective levels. The HOD can protect a published assignment from reallocation; faculty can confirm their own assignments. Approval rechecks the published parent and a SHA-256 fingerprint of scheduling inputs inside a serializable transaction before publishing.
@@ -62,7 +62,7 @@ The Compose service uses `OPTIMIZER_URL=http://optimizer:8000`. When running the
 - **Auditability:** schedule versions, solver runs, absences, event changes, profile changes, and proposal decisions appear in the web dashboard history.
 - **Explainers:** uncovered roles and reassignment changes include a reason based on qualification, availability, overlap, workload, or lower-priority balance/preference improvements.
 
-The planner models fixed-time duties. Variable event start times, minimum-cost-flow fast repair, email delivery, background queues, and production deployment hardening remain follow-on work. Demo credentials and Compose defaults are for a local development environment.
+The planner models fixed-time duties. Variable event start times, minimum-cost-flow fast repair, email delivery, background queues, and production deployment hardening remain follow-on work. Notifications are in-app and require the faculty member to have a sign-in account. Demo credentials and Compose defaults are for a local development environment.
 
 ## Verification
 

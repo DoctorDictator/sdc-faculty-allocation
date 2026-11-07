@@ -40,101 +40,109 @@ enum DisruptionType {
 }
 
 model Faculty {
-  id               String             @id @default(cuid())
-  employeeCode     String             @unique
+  id               String                 @id @default(cuid())
+  employeeCode     String                 @unique
   name             String
   title            String
   department       String
-  skills           String[]           @default([])
-  active           Boolean            @default(true)
-  targetMinutes    Int                @default(0)
+  skills           String[]               @default([])
+  active           Boolean                @default(true)
+  targetMinutes    Int                    @default(0)
   maxMinutes       Int
-  committedMinutes Int                @default(0)
+  committedMinutes Int                    @default(0)
   availability     AvailabilityBlock[]
   assignments      Assignment[]
   preferences      PreferenceCost[]
   disruptions      Disruption[]
   staffingRequests EventStaffingRequest[]
+  forcedDuties     Duty[]                 @relation("ForcedDutyFaculty")
   user             User?
-  createdAt        DateTime           @default(now()) @db.Timestamptz(3)
+  createdAt        DateTime               @default(now()) @db.Timestamptz(3)
 
   @@index([active, department])
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  role         UserRole @default(FACULTY)
-  facultyId    String?  @unique
-  faculty      Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  role          UserRole       @default(FACULTY)
+  facultyId     String?        @unique
+  faculty       Faculty?       @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  notifications Notification[]
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
 }
 
 model Event {
-  id        String      @id @default(cuid())
-  name      String
-  startsAt  DateTime    @db.Timestamptz(3)
-  endsAt    DateTime    @db.Timestamptz(3)
-  priority  Int         @default(1)
-  status    EventStatus @default(PLANNED)
-  duties    Duty[]
-  disruptions Disruption[]
+  id              String                @id @default(cuid())
+  name            String
+  startsAt        DateTime              @db.Timestamptz(3)
+  endsAt          DateTime              @db.Timestamptz(3)
+  priority        Int                   @default(1)
+  status          EventStatus           @default(PLANNED)
+  duties          Duty[]
+  disruptions     Disruption[]
   staffingRequest EventStaffingRequest?
-  createdAt DateTime    @default(now()) @db.Timestamptz(3)
+  createdAt       DateTime              @default(now()) @db.Timestamptz(3)
 
   @@index([startsAt, status])
 }
 
 model EventStaffingRequest {
-  id              String                @id @default(cuid())
-  requesterId     String
-  requester       Faculty               @relation(fields: [requesterId], references: [id], onDelete: Cascade)
-  eventId         String?               @unique
-  event           Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  eventName       String
-  startsAt        DateTime              @db.Timestamptz(3)
-  endsAt          DateTime              @db.Timestamptz(3)
-  requestedRole   String
-  requestedCount  Int
-  reason          String?
-  status          StaffingRequestStatus @default(PENDING)
-  approvedRole    String?
-  approvedCount   Int?
-  requiredSkill   String?
-  responseNote    String?
-  reviewedBy      String?
-  reviewedAt      DateTime?             @db.Timestamptz(3)
-  createdAt       DateTime              @default(now()) @db.Timestamptz(3)
+  id                   String                @id @default(cuid())
+  requesterId          String
+  requester            Faculty               @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  eventId              String?               @unique
+  event                Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  proposalId           Int?                  @unique
+  proposal             ScheduleVersion?      @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  eventName            String
+  startsAt             DateTime              @db.Timestamptz(3)
+  endsAt               DateTime              @db.Timestamptz(3)
+  requestedRole        String
+  requestedCount       Int
+  reason               String?
+  assignedFacultyNames String[]              @default([])
+  status               StaffingRequestStatus @default(PENDING)
+  approvedRole         String?
+  approvedCount        Int?
+  requiredSkill        String?
+  responseNote         String?
+  reviewedBy           String?
+  reviewedAt           DateTime?             @db.Timestamptz(3)
+  createdAt            DateTime              @default(now()) @db.Timestamptz(3)
 
   @@index([status, createdAt])
   @@index([requesterId, createdAt])
 }
 
 model Duty {
-  id             String          @id @default(cuid())
-  eventId        String
-  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  role           String
-  requiredSkill  String?
-  positionIndex  Int             @default(1)
-  minutes        Int
-  assignments    Assignment[]
-  preferences    PreferenceCost[]
+  id              String           @id @default(cuid())
+  eventId         String
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  role            String
+  requiredSkill   String?
+  forcedFacultyId String?
+  forcedFaculty   Faculty?         @relation("ForcedDutyFaculty", fields: [forcedFacultyId], references: [id], onDelete: SetNull)
+  positionIndex   Int              @default(1)
+  minutes         Int
+  assignments     Assignment[]
+  preferences     PreferenceCost[]
 
   @@unique([eventId, role, positionIndex])
   @@index([eventId])
+  @@index([forcedFacultyId])
 }
 
 model AvailabilityBlock {
-  id          String   @id @default(cuid())
-  facultyId   String
-  faculty     Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  startsAt    DateTime @db.Timestamptz(3)
-  endsAt      DateTime @db.Timestamptz(3)
-  reason      String?
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  id        String   @id @default(cuid())
+  facultyId String
+  faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  startsAt  DateTime @db.Timestamptz(3)
+  endsAt    DateTime @db.Timestamptz(3)
+  reason    String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([facultyId, startsAt, endsAt])
 }
@@ -150,27 +158,41 @@ model PreferenceCost {
 }
 
 model ScheduleVersion {
-  id            Int            @id @default(autoincrement())
-  parentId      Int?
-  parent        ScheduleVersion? @relation("VersionLineage", fields: [parentId], references: [id], onDelete: SetNull)
-  children      ScheduleVersion[] @relation("VersionLineage")
-  status        ScheduleStatus @default(PROPOSED)
-  solver        String
-  solverStatus  String
-  snapshotHash  String
-  objectiveJson Json?
-  createdBy     String
-  approvedBy    String?
-  rejectedBy    String?
-  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
-  approvedAt    DateTime?      @db.Timestamptz(3)
-  rejectedAt    DateTime?      @db.Timestamptz(3)
+  id              Int                   @id @default(autoincrement())
+  parentId        Int?
+  parent          ScheduleVersion?      @relation("VersionLineage", fields: [parentId], references: [id], onDelete: SetNull)
+  children        ScheduleVersion[]     @relation("VersionLineage")
+  status          ScheduleStatus        @default(PROPOSED)
+  solver          String
+  solverStatus    String
+  snapshotHash    String
+  objectiveJson   Json?
+  createdBy       String
+  approvedBy      String?
+  rejectedBy      String?
+  createdAt       DateTime              @default(now()) @db.Timestamptz(3)
+  approvedAt      DateTime?             @db.Timestamptz(3)
+  rejectedAt      DateTime?             @db.Timestamptz(3)
   rejectionReason String?
-  assignments   Assignment[]
-  disruptions   Disruption[]
-  solverRuns    SolverRun[]
+  assignments     Assignment[]
+  disruptions     Disruption[]
+  solverRuns      SolverRun[]
+  staffingRequest EventStaffingRequest?
 
   @@index([status, createdAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  section   String    @default("Schedule")
+  readAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, readAt, createdAt])
 }
 
 model SolverRun {
@@ -205,19 +227,19 @@ model Assignment {
 }
 
 model Disruption {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   type              DisruptionType
   facultyId         String?
-  faculty           Faculty?        @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  faculty           Faculty?         @relation(fields: [facultyId], references: [id], onDelete: SetNull)
   eventId           String?
   event             Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  startsAt          DateTime?       @db.Timestamptz(3)
-  endsAt            DateTime?       @db.Timestamptz(3)
+  startsAt          DateTime?        @db.Timestamptz(3)
+  endsAt            DateTime?        @db.Timestamptz(3)
   reason            String?
   metadata          Json?
   proposedVersionId Int?
   proposedVersion   ScheduleVersion? @relation(fields: [proposedVersionId], references: [id], onDelete: SetNull)
-  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
 
   @@index([type, createdAt])
 }

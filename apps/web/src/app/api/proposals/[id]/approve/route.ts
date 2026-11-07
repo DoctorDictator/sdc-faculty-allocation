@@ -17,13 +17,23 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     if (!proposal || proposal.status !== "PROPOSED") return NextResponse.json({ error: "This proposal is no longer awaiting approval." }, { status: 404 });
     await prisma.$transaction(
       async (tx) => {
-        const currentProposal = await tx.scheduleVersion.findUnique({ where: { id } });
+        const currentProposal = await tx.scheduleVersion.findUnique({
+          where: { id },
+          include: {
+            assignments: { include: { duty: { include: { event: true } } } },
+            staffingRequest: { include: { requester: { include: { user: true } } } },
+          },
+        });
         if (!currentProposal || currentProposal.status !== "PROPOSED") throw new ApprovalConflict("This proposal was already processed.");
         const { input } = await loadOptimizationSnapshot(currentProposal.parentId, "REPAIR", tx);
         if (snapshotHash(input) !== currentProposal.snapshotHash) {
           throw new StaleProposal("The scheduling data changed after this proposal was created. Generate a fresh proposal.");
         }
-        const current = await tx.scheduleVersion.findFirst({ where: { status: "PUBLISHED" }, orderBy: { id: "desc" } });
+        const current = await tx.scheduleVersion.findFirst({
+          where: { status: "PUBLISHED" },
+          orderBy: { id: "desc" },
+          include: { assignments: { include: { duty: { include: { event: true } } } } },
+        });
         if ((current?.id ?? null) !== currentProposal.parentId) throw new ApprovalConflict("A newer schedule was published. Generate a fresh proposal.");
         if (current) {
           const superseded = await tx.scheduleVersion.updateMany({
@@ -37,6 +47,60 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
           data: { status: "PUBLISHED", approvedBy: user.name ?? user.email ?? "HOD", approvedAt: new Date() },
         });
         if (published.count !== 1) throw new ApprovalConflict("This proposal was already processed.");
+
+        const oldByDuty = new Map((current?.assignments ?? []).map((assignment) => [assignment.dutyId, assignment.facultyId]));
+        const newByDuty = new Map(currentProposal.assignments.map((assignment) => [assignment.dutyId, assignment.facultyId]));
+        const notificationRows: Array<{ userId: string; title: string; message: string; section: string }> = [];
+        for (const assignment of currentProposal.assignments) {
+          if (oldByDuty.get(assignment.dutyId) === assignment.facultyId) continue;
+          const account = await tx.user.findFirst({ where: { facultyId: assignment.facultyId }, select: { id: true } });
+          if (account) {
+            notificationRows.push({
+              userId: account.id,
+              title: "You have been assigned an event task",
+              message: `${assignment.duty.event.name}: ${assignment.duty.role}, ${assignment.duty.event.startsAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}.`,
+              section: "Schedule",
+            });
+          }
+        }
+        for (const assignment of current?.assignments ?? []) {
+          if (newByDuty.has(assignment.dutyId) && newByDuty.get(assignment.dutyId) === assignment.facultyId) continue;
+          const account = await tx.user.findFirst({ where: { facultyId: assignment.facultyId }, select: { id: true } });
+          if (account) {
+            notificationRows.push({
+              userId: account.id,
+              title: "Your event assignment changed",
+              message: `${assignment.duty.event.name}: ${assignment.duty.role} is no longer assigned to you in schedule V${id}.`,
+              section: "Schedule",
+            });
+          }
+        }
+        if (currentProposal.staffingRequest) {
+          const staffingRequest = currentProposal.staffingRequest;
+          await tx.eventStaffingRequest.update({
+            where: { id: staffingRequest.id },
+            data: {
+              status: "APPROVED",
+              approvedRole: staffingRequest.requestedRole,
+              approvedCount: staffingRequest.requestedCount,
+              reviewedBy: user.name ?? "HOD",
+              reviewedAt: new Date(),
+            },
+          });
+          if (staffingRequest.requester.user) {
+            notificationRows.push({
+              userId: staffingRequest.requester.user.id,
+              title: "Your staffing request was approved",
+              message: `The allocation for ${staffingRequest.eventName} is now published in schedule V${id}.`,
+              section: "Schedule",
+            });
+          }
+        }
+        const dutyIds = currentProposal.assignments.map((assignment) => assignment.dutyId);
+        if (dutyIds.length) {
+          await tx.duty.updateMany({ where: { id: { in: dutyIds }, forcedFacultyId: { not: null } }, data: { forcedFacultyId: null } });
+        }
+        if (notificationRows.length) await tx.notification.createMany({ data: notificationRows });
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );

@@ -54,6 +54,7 @@ The Compose service uses `OPTIMIZER_URL=http://optimizer:8000`. When running the
 ## Workflows in this version
 
 - **Initial allocation:** CP-SAT assigns qualified and available faculty, prevents overlapping duties, respects maximum workload, and balances the highest workload before preferences.
+- **Faculty event staffing requests:** faculty can request an event with its date, time, task and headcount. The HOD can adjust the role, count and qualification, then approve it into the event register or decline it with a note. Approved duties enter the normal optimizer proposal; the HOD reviews and publishes the faculty assignments.
 - **Rolling planning:** the optimizer works over the next 90 days by default. Change `SCHEDULING_HORIZON_DAYS` from 7 to 365 days to adjust the window; assignments beyond it are carried into new versions until they enter the active window.
 - **Dynamic repair:** an absence, event change, or faculty profile update is recorded and asks CP-SAT to cover affected roles while minimizing changes. HODs can also preview a hypothetical absence in the Scenario Lab without changing live data.
 - **Proposal governance:** each solution is stored as a candidate schedule version. HOD review shows the complete roster, changed assignments, uncovered roles, explanations, and objective levels. The HOD can protect a published assignment from reallocation; faculty can confirm their own assignments. Approval rechecks the published parent and a SHA-256 fingerprint of scheduling inputs inside a serializable transaction before publishing.

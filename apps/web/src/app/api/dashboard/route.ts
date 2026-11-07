@@ -25,7 +25,7 @@ export async function GET() {
   const isHod = user.role === "HOD";
   const now = new Date();
   const horizonEnd = new Date(now.getTime() + schedulingHorizonDays() * 24 * 60 * 60 * 1000);
-  const [allFaculty, allEvents, published, optimizerOnline] = await Promise.all([
+  const [allFaculty, allEvents, published, staffingRequests, optimizerOnline] = await Promise.all([
     prisma.faculty.findMany({
       where: isHod ? {} : { id: user.facultyId ?? "" },
       include: { user: { select: { email: true } } },
@@ -44,6 +44,15 @@ export async function GET() {
           include: { faculty: true, duty: { include: { event: true } } },
         },
       },
+    }),
+    prisma.eventStaffingRequest.findMany({
+      where: isHod ? {} : { requesterId: user.facultyId ?? "" },
+      include: {
+        requester: { select: { name: true, employeeCode: true } },
+        event: { select: { id: true, name: true } },
+      },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      take: 100,
     }),
     optimizerIsAvailable(),
   ]);
@@ -210,6 +219,7 @@ export async function GET() {
     },
     faculty: facultyRows,
     events,
+    staffingRequests,
     proposals,
     absences,
     preferences,

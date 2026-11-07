@@ -15,6 +15,7 @@ import {
   ChevronRight,
   CircleAlert,
   ClipboardCheck,
+  ClipboardList,
   Clock3,
   LayoutDashboard,
   LogOut,
@@ -35,6 +36,13 @@ type Faculty = {
 };
 type Duty = { id: string; role: string; requiredSkill: string | null; positionIndex: number; minutes: number; facultyId: string | null; assignmentId: string | null; protected: boolean; acknowledged: boolean; facultyName: string | null; assignedElsewhere: boolean };
 type EventItem = { id: string; name: string; startsAt: string; endsAt: string; priority: number; status: string; inPlanningWindow: boolean; dutyCount: number; assignedCount: number; duties: Duty[] };
+type StaffingRequest = {
+  id: string; eventId: string | null; eventName: string; startsAt: string; endsAt: string;
+  requestedRole: string; requestedCount: number; reason: string | null; status: "PENDING" | "APPROVED" | "DECLINED";
+  approvedRole: string | null; approvedCount: number | null; requiredSkill: string | null; responseNote: string | null;
+  reviewedBy: string | null; reviewedAt: string | null; createdAt: string;
+  requester: { name: string; employeeCode: string }; event: { id: string; name: string } | null;
+};
 type Proposal = { id: number; status: string; solverStatus: string; createdAt: string; createdBy: string; assignmentCount: number; changedCount: number; mode: string; uncoveredCount: number };
 type ScheduleVersionRow = { id: number; parentId: number | null; status: string; solverStatus: string; assignmentCount: number; createdBy: string; approvedBy: string | null; rejectedBy: string | null; createdAt: string; approvedAt: string | null; rejectedAt: string | null; rejectionReason: string | null };
 type PreferenceItem = { dutyId: string; eventName: string; startsAt: string; role: string; positionIndex: number; cost: number };
@@ -65,6 +73,7 @@ type DashboardData = {
   stats: { activeFaculty: number; eventCount: number; dutyCount: number; assignedCount: number; openRoles: number; coveragePercent: number; conflictCount: number; maxWorkloadMinutes: number; workloadSpreadMinutes: number; openProposalCount: number; activeAbsenceCount: number };
   faculty: Faculty[];
   events: EventItem[];
+  staffingRequests: StaffingRequest[];
   proposals: Proposal[];
   absences: Array<{ id: string; startsAt: string; endsAt: string; reason: string | null; faculty: { id: string; name: string } }>;
   preferences: PreferenceItem[];
@@ -73,7 +82,7 @@ type DashboardData = {
   solverRuns: SolverRunItem[];
 };
 
-type Section = "Overview" | "Schedule" | "Scenarios" | "Faculty" | "Events" | "Availability" | "Preferences" | "Approvals";
+type Section = "Overview" | "Schedule" | "Scenarios" | "Faculty" | "Events" | "Requests" | "Availability" | "Preferences" | "Approvals";
 type EventRole = { role: string; requiredSkill: string; count: number };
 
 const sections: { name: Section; icon: typeof LayoutDashboard; label: string }[] = [
@@ -82,6 +91,7 @@ const sections: { name: Section; icon: typeof LayoutDashboard; label: string }[]
   { name: "Scenarios", icon: Beaker, label: "Scenario lab" },
   { name: "Faculty", icon: Users, label: "Faculty" },
   { name: "Events", icon: CalendarPlus, label: "Events & duties" },
+  { name: "Requests", icon: ClipboardList, label: "Staffing requests" },
   { name: "Availability", icon: Clock3, label: "Availability" },
   { name: "Preferences", icon: Sparkles, label: "My preferences" },
   { name: "Approvals", icon: ClipboardCheck, label: "Proposals" },
@@ -129,7 +139,7 @@ export default function Dashboard({ user }: { user: User }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
-  const [modal, setModal] = useState<"event" | "reschedule" | "absence" | "faculty" | null>(null);
+  const [modal, setModal] = useState<"event" | "reschedule" | "absence" | "faculty" | "request" | null>(null);
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [loginAccess, setLoginAccess] = useState(false);
@@ -349,6 +359,69 @@ export default function Dashboard({ user }: { user: User }) {
     }
   }
 
+  async function saveStaffingRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy("staffing-request");
+    setError("");
+    const form = new FormData(event.currentTarget);
+    const payload = {
+      eventName: String(form.get("eventName") || "").trim(),
+      startsAt: new Date(String(form.get("startsAt") || "")).toISOString(),
+      endsAt: new Date(String(form.get("endsAt") || "")).toISOString(),
+      requestedRole: String(form.get("requestedRole") || "").trim(),
+      requestedCount: Number(form.get("requestedCount") || 1),
+      reason: String(form.get("reason") || "").trim(),
+    };
+    try {
+      const response = await fetch("/api/event-requests", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not send the staffing request.");
+      setModal(null);
+      setSection("Requests");
+      setToast("Staffing request sent to the HOD.");
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not send the staffing request.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function reviewStaffingRequest(id: string, decision: {
+    action: "approve" | "decline";
+    approvedRole?: string;
+    approvedCount?: number;
+    requiredSkill?: string;
+    responseNote?: string;
+  }) {
+    setBusy(`staffing-request-${id}`);
+    setError("");
+    try {
+      const response = await fetch(`/api/event-requests/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(decision),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not review the staffing request.");
+      if (decision.action === "approve") {
+        setToast("Request approved and added to Events. Generate a proposal to assign faculty.");
+        setSection("Events");
+      } else {
+        setToast("Staffing request declined.");
+      }
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not review the staffing request.");
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function saveAbsence(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy("absence");
@@ -456,7 +529,7 @@ export default function Dashboard({ user }: { user: User }) {
     }
   }
 
-  const sectionTitle = section === "Events" ? "Events & duties" : section;
+  const sectionTitle = section === "Events" ? "Events & duties" : section === "Requests" ? "Staffing requests" : section;
   const today = fullDate(new Date());
 
   return (
@@ -470,6 +543,7 @@ export default function Dashboard({ user }: { user: User }) {
             <button className={`nav-item ${section === name ? "active" : ""}`} key={name} onClick={() => { setSection(name); setMobileNavOpen(false); }}>
               <Icon size={17} strokeWidth={1.9} /><span>{label}</span>
               {name === "Approvals" && Boolean(data?.stats.openProposalCount) && <span className="nav-count">{data?.stats.openProposalCount}</span>}
+              {name === "Requests" && isHod && Boolean(data?.staffingRequests.filter((request) => request.status === "PENDING").length) && <span className="nav-count">{data?.staffingRequests.filter((request) => request.status === "PENDING").length}</span>}
             </button>
           ))}
         </nav>
@@ -490,9 +564,10 @@ export default function Dashboard({ user }: { user: User }) {
 
         <div className="page-content">
           <div className="page-heading">
-            <div><div className="eyebrow">{isHod ? "DEPARTMENT OPERATIONS" : "FACULTY WORKSPACE"}</div><h1>{section === "Overview" ? `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user.name.split(" ")[0]}` : sectionTitle}</h1><p>{section === "Overview" ? "Your department schedule, workload and changes in one place." : section === "Schedule" ? "A clear view of who is assigned, when and where." : section === "Scenarios" ? "Explore a hypothetical absence and see the likely schedule repair without changing the live plan." : section === "Faculty" ? "Skills, availability and workload at a glance." : section === "Events" ? "Create academic activities and define the roles they need." : section === "Availability" ? "Review reported time away and correct availability records." : section === "Preferences" ? "Tell the planner which duties fit you best." : "Review solver proposals before anything goes live."}</p></div>
+            <div><div className="eyebrow">{isHod ? "DEPARTMENT OPERATIONS" : "FACULTY WORKSPACE"}</div><h1>{section === "Overview" ? `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user.name.split(" ")[0]}` : sectionTitle}</h1><p>{section === "Overview" ? "Your department schedule, workload and changes in one place." : section === "Schedule" ? "A clear view of who is assigned, when and where." : section === "Scenarios" ? "Explore a hypothetical absence and see the likely schedule repair without changing the live plan." : section === "Faculty" ? "Skills, availability and workload at a glance." : section === "Events" ? "Create academic activities and define the roles they need." : section === "Requests" ? isHod ? "Review staffing requests, set the roles and headcount, then decide which duties enter the schedule." : "Request people for an event and track the HOD’s decision." : section === "Availability" ? "Review reported time away and correct availability records." : section === "Preferences" ? "Tell the planner which duties fit you best." : "Review solver proposals before anything goes live."}</p></div>
             <div className="heading-actions">
               <button className="button button-secondary" onClick={() => setModal("absence")}><CircleAlert size={16} />Report absence</button>
+              {!isHod && section === "Requests" && <button className="button button-primary" onClick={() => { setError(""); setModal("request"); }}><Plus size={16} />Request event staff</button>}
               {isHod && <button className="button button-primary" onClick={() => void generateProposal()} disabled={busy === "optimize" || data?.optimizerOnline === false} title={data?.optimizerOnline === false ? "Start the optimizer service to create a schedule." : undefined}><Sparkles size={16} />{busy === "optimize" ? "Optimizing…" : data?.optimizerOnline === false ? "Optimizer offline" : data?.currentVersion ? "Rebalance schedule" : "Generate allocation"}</button>}
             </div>
           </div>
@@ -505,6 +580,7 @@ export default function Dashboard({ user }: { user: User }) {
               {section === "Scenarios" && isHod && <ScenarioSection faculty={data.faculty} optimizerOnline={data.optimizerOnline} planningHorizonDays={data.planningHorizonDays} />}
               {section === "Faculty" && <FacultySection faculty={visibleFaculty} search={search} setSearch={setSearch} reportAbsence={() => setModal("absence")} isHod={isHod} addFaculty={() => openFacultyForm()} editFaculty={openFacultyForm} />}
               {section === "Events" && <EventsSection events={data.events} isHod={isHod} openEvent={openNewEvent} reschedule={openEventReschedule} cancelEvent={cancelEvent} busy={busy} />}
+              {section === "Requests" && <StaffingRequestsSection requests={data.staffingRequests} isHod={isHod} busy={busy} decide={reviewStaffingRequest} onNew={() => { setError(""); setModal("request"); }} />}
               {section === "Availability" && <AvailabilitySection absences={data.absences} isHod={isHod} busy={busy} removeAbsence={removeAbsence} />}
               {section === "Preferences" && <PreferencesSection preferences={data.preferences} busy={busy} save={savePreference} />}
               {section === "Approvals" && <ApprovalsSection proposals={data.proposals} isHod={isHod} busy={busy} approve={approveProposal} reject={rejectProposal} generate={generateProposal} details={proposalDetails} openId={openProposalId} loadingId={proposalLoadingId} toggleDetails={toggleProposalDetails} optimizerOnline={data.optimizerOnline} />}
@@ -516,7 +592,7 @@ export default function Dashboard({ user }: { user: User }) {
 
       {modal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setModal(null); setEditingEvent(null); setError(""); } }}>
         <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-          <div className="modal-header"><div><div className="eyebrow">{modal === "event" || modal === "reschedule" ? "PLAN A DUTY" : modal === "absence" ? "UPDATE AVAILABILITY" : "FACULTY DIRECTORY"}</div><h2 id="modal-title">{modal === "event" ? "Add an event" : modal === "reschedule" ? "Reschedule event" : modal === "absence" ? "Report an absence" : editingFaculty ? "Edit faculty profile" : "Add faculty member"}</h2></div><button className="icon-button" aria-label="Close" onClick={() => { setModal(null); setError(""); }}><X size={19} /></button></div>
+          <div className="modal-header"><div><div className="eyebrow">{modal === "event" || modal === "reschedule" ? "PLAN A DUTY" : modal === "absence" ? "UPDATE AVAILABILITY" : modal === "request" ? "REQUEST EVENT STAFF" : "FACULTY DIRECTORY"}</div><h2 id="modal-title">{modal === "event" ? "Add an event" : modal === "reschedule" ? "Reschedule event" : modal === "absence" ? "Report an absence" : modal === "request" ? "Request people for an event" : editingFaculty ? "Edit faculty profile" : "Add faculty member"}</h2></div><button className="icon-button" aria-label="Close" onClick={() => { setModal(null); setError(""); }}><X size={19} /></button></div>
           {modal === "event" || modal === "reschedule" ? <form className="modal-form" onSubmit={saveEvent}>
             <label className="form-label">Event name<input name="name" defaultValue={editingEvent?.name ?? ""} placeholder="e.g. Semester 5 midterm" minLength={3} maxLength={160} required={!editingEvent} disabled={Boolean(editingEvent)} /></label>
             <div className="form-grid"><label className="form-label">Starts<input name="startsAt" type="datetime-local" defaultValue={editingEvent ? localDateTime(editingEvent.startsAt) : dateTimeField(1, 10)} required /></label><label className="form-label">Ends<input name="endsAt" type="datetime-local" defaultValue={editingEvent ? localDateTime(editingEvent.endsAt) : dateTimeField(1, 12)} required /></label></div>
@@ -532,6 +608,14 @@ export default function Dashboard({ user }: { user: User }) {
             <div className="modal-note"><ShieldCheck size={17} /><span>The optimizer will prepare a repair proposal. The published schedule changes only after HOD approval.</span></div>
             {error && <div className="form-error" role="alert">{error}</div>}
             <div className="modal-actions"><button className="button button-secondary" type="button" onClick={() => setModal(null)}>Cancel</button><button className="button button-primary" type="submit" disabled={busy === "absence"}>{busy === "absence" ? "Finding replacements…" : "Report and reallocate"}</button></div>
+          </form> : modal === "request" ? <form className="modal-form" onSubmit={saveStaffingRequest}>
+            <label className="form-label">Event name<input name="eventName" placeholder="e.g. Department research seminar" minLength={3} maxLength={160} required /></label>
+            <div className="form-grid"><label className="form-label">Starts<input name="startsAt" type="datetime-local" defaultValue={dateTimeField(7, 10)} required /></label><label className="form-label">Ends<input name="endsAt" type="datetime-local" defaultValue={dateTimeField(7, 12)} required /></label></div>
+            <div className="form-grid"><label className="form-label">Role or task needed<input name="requestedRole" placeholder="e.g. Invigilator" minLength={2} maxLength={80} required /></label><label className="form-label">People needed<input name="requestedCount" type="number" min="1" max="30" defaultValue="2" required /></label></div>
+            <label className="form-label">Why are they needed? <span className="optional-label">Optional</span><textarea name="reason" rows={3} maxLength={500} placeholder="Add a short note for the HOD" /></label>
+            <div className="modal-note"><Users size={17} /><span>The HOD reviews every request and sets the final role, staff count, and qualification before adding it to the schedule.</span></div>
+            {error && <div className="form-error" role="alert">{error}</div>}
+            <div className="modal-actions"><button className="button button-secondary" type="button" onClick={() => setModal(null)}>Cancel</button><button className="button button-primary" type="submit" disabled={busy === "staffing-request"}>{busy === "staffing-request" ? "Sending…" : "Send request"}</button></div>
           </form> : <form className="modal-form" onSubmit={saveFaculty}>
             <div className="form-grid"><label className="form-label">Employee code<input name="employeeCode" defaultValue={editingFaculty?.employeeCode ?? ""} placeholder="FC-051" required /></label><label className="form-label">Full name<input name="name" defaultValue={editingFaculty?.name ?? ""} placeholder="Faculty name" required /></label></div>
             <div className="form-grid"><label className="form-label">Academic title<input name="title" defaultValue={editingFaculty?.title ?? "Assistant Professor"} required /></label><label className="form-label">Department<input name="department" defaultValue={editingFaculty?.department ?? "Computer Science"} required /></label></div>
@@ -704,6 +788,61 @@ function PreferencesSection({ preferences, busy, save }: { preferences: Preferen
     <section className="panel preference-panel"><div className="panel-heading"><div><div className="eyebrow">PERSONAL PREFERENCES</div><h2>Upcoming duty preferences</h2></div><span className="proposal-total">{preferences.length} roles</span></div>
       {preferences.length ? <div className="preference-list">{preferences.map((item) => <article className="preference-row" key={item.dutyId}><span className="preference-date"><strong>{new Intl.DateTimeFormat("en-IN", { day: "2-digit", timeZone: "Asia/Kolkata" }).format(new Date(item.startsAt))}</strong><small>{new Intl.DateTimeFormat("en-IN", { month: "short", timeZone: "Asia/Kolkata" }).format(new Date(item.startsAt)).toUpperCase()}</small></span><div className="preference-copy"><strong>{item.eventName}</strong><span>{item.role}{item.positionIndex > 1 ? ` ${item.positionIndex}` : ""}</span></div><label className="preference-select-label"><span>Preference</span><select value={item.cost} disabled={busy === `preference-${item.dutyId}`} onChange={(event) => void save(item.dutyId, Number(event.target.value))}><option value={0}>Prefer</option><option value={5}>No preference</option><option value={20}>Avoid if possible</option></select></label></article>)}</div> : <EmptyInline title="No future duties to review" body="Your HOD will add upcoming duties to the schedule workspace." />}
     </section></div>;
+}
+
+function StaffingRequestsSection({ requests, isHod, busy, decide, onNew }: {
+  requests: StaffingRequest[];
+  isHod: boolean;
+  busy: string;
+  decide: (id: string, decision: { action: "approve" | "decline"; approvedRole?: string; approvedCount?: number; requiredSkill?: string; responseNote?: string }) => void;
+  onNew: () => void;
+}) {
+  const pendingCount = requests.filter((request) => request.status === "PENDING").length;
+  return <div className="section-stack">
+    <section className="panel staffing-requests-panel">
+      <div className="panel-heading"><div><div className="eyebrow">EVENT STAFFING</div><h2>{isHod ? "Faculty requests" : "Your requests"}</h2></div><span className="proposal-total">{isHod ? `${pendingCount} awaiting review` : `${requests.length} total`}</span></div>
+      {!isHod && <div className="staffing-request-intro"><strong>Need people for an event?</strong><span>Send the event details, task, and headcount. The HOD sets the final staffing and skill requirements.</span><button className="button button-primary button-compact" onClick={onNew}><Plus size={14} />Request event staff</button></div>}
+      {requests.length ? <div className="staffing-request-list">{requests.map((request) => <StaffingRequestCard key={request.id} request={request} isHod={isHod} busy={busy} decide={decide} />)}</div> : <div className="empty-request-state"><strong>{isHod ? "No faculty requests yet" : "No event staffing requests yet"}</strong><span>{isHod ? "Faculty requests for event staff will appear here for your review." : "Submit an event request and track the HOD’s decision here."}</span></div>}
+    </section>
+    <div className="event-tip"><ClipboardList size={17} /><span><strong>{isHod ? "You control the final staffing request." : "The HOD decides the final staffing."}</strong> {isHod ? "Adjust the role, number of people, and qualification before approval. Approved duties enter Events; generate and review a schedule proposal to assign faculty." : "Approved requests become event duties. The HOD reviews the proposed faculty assignments before publishing the schedule."}</span></div>
+  </div>;
+}
+
+function StaffingRequestCard({ request, isHod, busy, decide }: {
+  request: StaffingRequest;
+  isHod: boolean;
+  busy: string;
+  decide: (id: string, decision: { action: "approve" | "decline"; approvedRole?: string; approvedCount?: number; requiredSkill?: string; responseNote?: string }) => void;
+}) {
+  const [approvedRole, setApprovedRole] = useState(request.approvedRole ?? request.requestedRole);
+  const [approvedCount, setApprovedCount] = useState(request.approvedCount ?? request.requestedCount);
+  const [requiredSkill, setRequiredSkill] = useState(request.requiredSkill ?? "");
+  const [responseNote, setResponseNote] = useState(request.responseNote ?? "");
+  const isBusy = busy === `staffing-request-${request.id}`;
+  const statusLabel = request.status === "PENDING" ? "Awaiting review" : request.status === "APPROVED" ? "Approved" : "Declined";
+
+  return <article className="staffing-request-card">
+    <div className="staffing-request-header">
+      <div><span className={`staffing-request-status request-${request.status.toLowerCase()}`}>{statusLabel}</span><h3>{request.eventName}</h3><p>{shortDate(request.startsAt)} · {timeRange(request.startsAt, request.endsAt)}</p></div>
+      {isHod && <span className="staffing-requester">{request.requester.name} · {request.requester.employeeCode}</span>}
+    </div>
+    <div className="staffing-request-details"><span><strong>Requested:</strong> {request.requestedCount} people for {request.requestedRole}</span>{request.reason && <p>{request.reason}</p>}</div>
+    {request.status === "APPROVED" && <div className="staffing-approved-detail"><CheckCircle2 size={15} /><span>Approved for {request.approvedCount} {request.approvedRole}{request.requiredSkill ? ` · skill: ${request.requiredSkill}` : " · any skill"}{request.event && ` · added to Events`}</span></div>}
+    {request.responseNote && <div className="staffing-response-note"><strong>HOD note:</strong> {request.responseNote}</div>}
+    {isHod && request.status === "PENDING" && <form className="staffing-review-form" onSubmit={(event) => { event.preventDefault(); decide(request.id, { action: "approve", approvedRole, approvedCount, requiredSkill, responseNote }); }}>
+      <div className="staffing-review-title"><strong>Set approved staffing</strong><span>You can adjust the request before creating event duties.</span></div>
+      <div className="staffing-review-fields">
+        <label className="form-label">Role or task<input value={approvedRole} minLength={2} maxLength={80} onChange={(event) => setApprovedRole(event.target.value)} required /></label>
+        <label className="form-label">People assigned<input type="number" value={approvedCount} min={1} max={30} onChange={(event) => setApprovedCount(Number(event.target.value))} required /></label>
+        <label className="form-label">Required skill <span className="optional-label">Optional</span><input value={requiredSkill} maxLength={80} placeholder="Leave blank for any skill" onChange={(event) => setRequiredSkill(event.target.value)} /></label>
+      </div>
+      <label className="form-label">Response note <span className="optional-label">Optional</span><input value={responseNote} maxLength={500} placeholder="A note for the requesting faculty member" onChange={(event) => setResponseNote(event.target.value)} /></label>
+      <div className="staffing-review-actions">
+        <button className="button button-secondary button-compact" type="button" disabled={busy.startsWith("staffing-request-")} onClick={() => decide(request.id, { action: "decline", responseNote })}>{isBusy ? "Saving…" : "Decline request"}</button>
+        <button className="button button-primary button-compact" type="submit" disabled={busy.startsWith("staffing-request-") || approvedCount < 1 || !approvedRole.trim()}>{isBusy ? "Approving…" : "Approve & add to Events"}</button>
+      </div>
+    </form>}
+  </article>;
 }
 
 function EventsSection({ events, isHod, openEvent, reschedule, cancelEvent, busy }: { events: EventItem[]; isHod: boolean; openEvent: () => void; reschedule: (event: EventItem) => void; cancelEvent: (event: EventItem) => void; busy: string }) {
